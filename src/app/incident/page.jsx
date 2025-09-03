@@ -122,7 +122,7 @@ export default function IncidentPage() {
               <UserMapComponent markers={markers} userLocation={userLocation} />
             )}
             {!userLocation && <p>กรุณาเปิดใช้งานตำแหน่ง</p>}
-          </div>;
+          </div>
 
           <div>
             <label className="block font-semibold">รายละเอียดเหตุการณ์</label>

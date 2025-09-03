@@ -52,39 +52,52 @@ export default function MapUser({ markers = [], userLocation }) {
 
       {/* Marker และ Circle สำหรับ Alert */}
       {markers.map((alert, idx) => {
-        const markerLat = alert.position.lat;
-        const markerLng = alert.position.lng;
+  // ✅ รองรับทั้งสองรูปแบบ:
+  // 1. alert.position.lat, alert.position.lng
+  // 2. alert.lat, alert.lng
+  const markerLat = alert?.position?.lat ?? alert?.lat;
+  const markerLng = alert?.position?.lng ?? alert?.lng;
 
-        const now = new Date();
-        if (alert.expireAt && new Date(alert.expireAt) <= now) {
-          return null; // หมดอายุ → ไม่แสดง marker
-        }
+  // ถ้าไม่มี lat หรือ lng → ไม่ render
+  if (!markerLat || !markerLng) return null;
 
-        return (
-          <div key={alert._id || idx}>
-            <Marker position={[markerLat, markerLng]} icon={customIcon}>
-              <Popup>
-                <strong>ประเภทเหตุการณ์:</strong> {alert.type}
-                <br />
-                <strong>ข้อความ:</strong> {alert.message}
-                <br />
-                <strong>รัศมี:</strong> {alert.radius} เมตร
-                <br />
-                <strong>เวลา:</strong>{' '}
-                {new Date(alert.createdAt).toLocaleString()}
-              </Popup>
-            </Marker>
+  const now = new Date();
+  if (alert.expireAt && new Date(alert.expireAt) <= now) {
+    return null; // หมดอายุ → ไม่แสดง marker
+  }
 
-            {alert.radius && (
-              <Circle
-                center={[markerLat, markerLng]}
-                radius={alert.radius}
-                pathOptions={{ color: 'red', fillColor: 'red', fillOpacity: 0.2 }}
-              />
-            )}
-          </div>
-        );
-      })}
+  return (
+    <div key={alert._id || idx}>
+      <Marker position={[markerLat, markerLng]} icon={customIcon}>
+        <Popup>
+          <strong>ประเภทเหตุการณ์:</strong> {alert.type || 'ไม่ระบุ'}
+          <br />
+          <strong>ข้อความ:</strong> {alert.message || 'ไม่มีข้อความ'}
+          <br />
+          {alert.radius && (
+            <>
+              <strong>รัศมี:</strong> {alert.radius} เมตร
+              <br />
+            </>
+          )}
+          <strong>เวลา:</strong>{' '}
+          {alert.createdAt
+            ? new Date(alert.createdAt).toLocaleString()
+            : 'ไม่ระบุ'}
+        </Popup>
+      </Marker>
+
+      {alert.radius && (
+        <Circle
+          center={[markerLat, markerLng]}
+          radius={alert.radius}
+          pathOptions={{ color: 'red', fillColor: 'red', fillOpacity: 0.2 }}
+        />
+      )}
+    </div>
+  )
+})}
+
     </MapContainer>
   );
 }
