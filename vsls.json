@@ -1,0 +1,9 @@
+{
+    "excludeFiles": [
+        "**/node_modules", 
+        "**/build",       
+        "**/dist",       
+        "**/*.log",       
+        "**/.git"       
+    ]
+}
