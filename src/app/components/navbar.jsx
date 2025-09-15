@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 
+
 function Navbar({ session }) { 
   const pathname = usePathname();
   const isActive = (path) => pathname.toLowerCase().startsWith(path.toLowerCase());
@@ -34,7 +35,7 @@ function Navbar({ session }) {
     <nav className='bg-black text-white p-5 z-50'>
       <div className="container mx-auto flex items-center justify-between">
         <div>
-          <Link href="/" className="text-2xl font-bold text-gray-800 dark:text-white">Logo</Link>
+         <img src="/Logo.png" alt="" className="h-18 w-18" />
         </div>
 
         {/* Hamburger สำหรับมือถือ */}
@@ -47,7 +48,7 @@ function Navbar({ session }) {
           </svg>
         </button>
 
-        <ul className={`absolute flex-col md:flex-row md:flex space-y-2 md:space-y-0 md:space-x-4 absolute md:static top-20 left-0 w-full md:w-auto bg-black md:bg-transparent p-4 md:p-0 transition-all duration-300 z-100 ${isMobileMenuOpen ? 'flex' : 'hidden md:flex'}`}>
+        <ul className={`flex-col md:flex-row md:flex space-y-2 md:space-y-0 md:space-x-4 absolute md:static top-20 left-0 w-full md:w-auto bg-black md:bg-transparent p-4 md:p-0 transition-all duration-300 z-100 ${isMobileMenuOpen ? 'flex' : 'hidden md:flex'}`}>
           {!session ? (
             <>
               <li><Link href='/' className='hover:text-gray-300 transition-colors duration-200'>Sign in</Link></li>

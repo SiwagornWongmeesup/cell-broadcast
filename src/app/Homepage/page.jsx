@@ -161,7 +161,7 @@ export default function HomePage() {
         </div>
 
         {/* ส่วนคู่มือการรับมือ */}
-        <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 overflow-y-auto">
+        <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 overflow-y-auto pt-27">
           <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4">
             คู่มือการรับมือสถานการณ์
           </h2>

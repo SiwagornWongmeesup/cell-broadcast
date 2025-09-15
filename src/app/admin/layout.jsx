@@ -4,7 +4,6 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import NavbarAdmin from '../components/navbarAdmin'; 
 import Sidebar from '../components/Sidebar';
 
 export default function AdminLayout({ children }) {
@@ -33,7 +32,6 @@ export default function AdminLayout({ children }) {
   // Layout ของ Admin
   return (
     <div className="flex flex-col h-screen ">
-      <NavbarAdmin />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-6 bg-gray-100">

@@ -1,4 +1,3 @@
-// components/MapUser.jsx
 'use client';
 
 import { MapContainer, Marker, TileLayer, Popup, Circle } from 'react-leaflet';

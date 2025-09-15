@@ -1,51 +1,47 @@
-'use client';
+"use client";
 
-import { useSession } from "next-auth/react";
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from 'next/navigation';
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const MapClient = dynamic(() => import('../components/MapClient'), { ssr: false });
 
-export default function IncidentPage() {
+export default function Incident() {
   const { data: session } = useSession();
-  const [hasFetchedLocation, setHasFetchedLocation] = useState(false);
-  const [location, setLocation] = useState({ lat: null, lng: null });
   const router = useRouter();
 
   const [formData, setFormData] = useState({
-    userId: null,
-    title: "",
-    details: "",
-    date: "",
-    time: "",
-    name: "",
+    type: "",
+    description: "",
     contact: "",
-    email: "",
-    file: null,
   });
 
-  // อัปเดต userId เมื่อ session โหลดเสร็จ
-  useEffect(() => {
-    if (session?.user?.id) {
-      setFormData(prev => ({ ...prev, userId: session.user.id }));
-    }
-  }, [session]);
+  // location เป็น object เสมอ
+  const [location, setLocation] = useState({ lat: null, lng: null });
+  const [hasFetchedLocation, setHasFetchedLocation] = useState(false);
 
-  // ดึงตำแหน่งปัจจุบันครั้งแรก
   const fetchLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setLocation(coords);
+          setLocation({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
           setHasFetchedLocation(true);
         },
         (err) => {
-          console.error("ไม่สามารถดึงตำแหน่งได้:", err);
+          console.warn("ไม่สามารถเข้าถึงตำแหน่ง:", err.message);
+          // fallback → Bangkok
+          setLocation({ lat: 13.7563, lng: 100.5018 });
           setHasFetchedLocation(true);
         }
       );
+    } else {
+      console.warn("เบราว์เซอร์ไม่รองรับการระบุตำแหน่ง");
+      setLocation({ lat: 13.7563, lng: 100.5018 });
+      setHasFetchedLocation(true);
     }
   };
 
@@ -55,231 +51,134 @@ export default function IncidentPage() {
     }
   }, [hasFetchedLocation]);
 
-  // handleChange สั้นลง
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!location.lat || !location.lng) {
+    if (location.lat == null || location.lng == null) {
       alert("กรุณาเลือกตำแหน่งบนแผนที่");
       return;
     }
 
-    if (!formData.title) {
-      alert("กรุณาเลือกประเภทภัยพิบัติ");
-      return;
-    }
-
-    if (formData.contact && formData.contact.length !== 10) {
-      alert("กรุณากรอกเบอร์ติดต่อให้ครบถ้วน");
-      return;
-    }
+    const payload = { ...formData, location };
 
     try {
-      const data = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value) data.append(key, value);
+      const res = await fetch("/api/incidents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
-      // append location
-      data.append("location", JSON.stringify(location));
-      data.append("userId", session?.user?.id || "");
-
-      const res = await fetch("/api/user-alerts", { method: "POST", body: data });
-      const result = await res.json();
-      console.log(result);
-      if (!res.ok) throw new Error("ส่งข้อมูลล้มเหลว");
-
-      alert("✅ ส่งเรื่องเรียบร้อยแล้ว");
-
-      // reset form
-      setFormData({
-        userId: session?.user?.id || null,
-        title: "",
-        details: "",
-        date: "",
-        time: "",
-        name: "",
-        contact: "",
-        email: "",
-        file: null,
-      });
-
-      // ดึง location ใหม่หลังส่งสำเร็จ
-      setHasFetchedLocation(false);
-
+      if (res.ok) {
+        alert("รายงานเหตุการณ์เรียบร้อย");
+        router.push("/");
+      } else {
+        alert("เกิดข้อผิดพลาด");
+      }
     } catch (err) {
       console.error(err);
-      alert("❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์");
     }
   };
 
   return (
-  <div className="max-w-3xl mx-auto bg-white p-4 sm:p-6 rounded-2xl shadow-md mt-6">
-  <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-center text-red-600">
-    แจ้งเหตุการณ์
-  </h1>
-  <form onSubmit={handleSubmit} className="space-y-4">
-
-    {/* เลือกประเภทภัยพิบัติ */}
-    <select
-      name="title"
-      className="w-full border p-2 rounded"
-      value={formData.title}
-      onChange={handleChange}
-      required
-    >
-      <option value="">เลือกประเภทภัยพิบัติ</option>
-      <option value="แผ่นดินไหว">แผ่นดินไหว</option>
-      <option value="ภูเขาไฟระเบิด">ภูเขาไฟระเบิด</option>
-      <option value="น้ำท่วม">น้ำท่วม</option>
-      <option value="พายุ">พายุ</option>
-      <option value="ไฟป่า">ไฟป่า</option>
-      <option value="อื่นๆ">อื่นๆ</option>
-    </select>
-
-    {/* Map */}
-    <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] bg-gray-200 rounded-lg overflow-hidden relative z-0">
-      {hasFetchedLocation ? (
-        <MapClient location={location} setLocation={setLocation} showInputs={false} />
-      ) : (
-        <p className="text-center mt-4">กรุณาเปิดใช้งานตำแหน่ง</p>
-      )}
-    </div>
-
-    {/* Lat/Lng */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-      <input
-        type="number"
-        step="0.000001"
-        value={location.lat || ''}
-        onChange={e =>
-          setLocation(prev => ({ ...prev, lat: parseFloat(e.target.value) || null }))
-        }
-        className="border p-2 rounded w-full"
-        placeholder="Latitude"
-      />
-      <input
-        type="number"
-        step="0.000001"
-        value={location.lng || ''}
-        onChange={e =>
-          setLocation(prev => ({ ...prev, lng: parseFloat(e.target.value) || null }))
-        }
-        className="border p-2 rounded w-full"
-        placeholder="Longitude"
-      />
-    </div>
-
-    {/* รายละเอียด */}
-    <div>
-      <label className="block font-semibold mb-1">รายละเอียดเหตุการณ์</label>
-      <textarea
-        name="details"
-        rows={4}
-        value={formData.details}
-        className="w-full p-2 border rounded"
-        onChange={handleChange}
-        required
-      />
-    </div>
-
-    {/* วันที่ เวลา */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div>
-        <label className="block font-semibold mb-1">วันที่</label>
-        <input
-          type="date"
-          name="date"
-          value={formData.date}
+    <div className="p-6 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">รายงานเหตุการณ์</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        
+        {/* ประเภทเหตุการณ์ */}
+        <select
+          value={formData.type}
+          onChange={(e) =>
+            setFormData({ ...formData, type: e.target.value })
+          }
           className="w-full p-2 border rounded"
-          onChange={handleChange}
+          required
+        >
+          <option value="">เลือกประเภท</option>
+          <option value="flood">น้ำท่วม</option>
+          <option value="earthquake">แผ่นดินไหว</option>
+          <option value="fire">ไฟไหม้</option>
+          <option value="other">อื่น ๆ</option>
+        </select>
+
+        {/* รายละเอียด */}
+        <textarea
+          placeholder="รายละเอียด"
+          value={formData.description}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
+          className="w-full p-2 border rounded"
           required
         />
-      </div>
-      <div>
-        <label className="block font-semibold mb-1">เวลา</label>
+
+        {/* เบอร์ติดต่อ */}
         <input
-          type="time"
-          name="time"
-          value={formData.time}
+          type="text"
+          placeholder="เบอร์ติดต่อ"
+          value={formData.contact}
+          onChange={(e) =>
+            setFormData({ ...formData, contact: e.target.value })
+          }
           className="w-full p-2 border rounded"
-          onChange={handleChange}
           required
         />
-      </div>
+
+        {/* พิกัด */}
+        <div className="space-y-2">
+          <label className="block font-medium">ตำแหน่ง:</label>
+          <input
+            type="number"
+            step="any"
+            placeholder="Latitude"
+            value={location.lat ?? ""}
+            onChange={(e) =>
+              setLocation((prev) => ({
+                ...(prev || {}),
+                lat: parseFloat(e.target.value) || null,
+              }))
+            }
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="number"
+            step="any"
+            placeholder="Longitude"
+            value={location.lng ?? ""}
+            onChange={(e) =>
+              setLocation((prev) => ({
+                ...(prev || {}),
+                lng: parseFloat(e.target.value) || null,
+              }))
+            }
+            className="w-full p-2 border rounded"
+          />
+        </div>
+
+        {/* แผนที่ */}
+        {hasFetchedLocation && location.lat != null && location.lng != null ? (
+          <Map location={location} setLocation={setLocation} />
+        ) : (
+          <p>กำลังโหลดแผนที่...</p>
+        )}
+
+        {/* ปุ่มรีเฟรชตำแหน่ง */}
+        <button
+          type="button"
+          onClick={fetchLocation}
+          className="text-blue-500 underline"
+        >
+          รีเฟรชตำแหน่งปัจจุบัน
+        </button>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          className="px-4 py-2 bg-green-600 text-white rounded"
+        >
+          ส่งรายงาน
+        </button>
+      </form>
     </div>
-
-    {/* ไฟล์ */}
-    <div>
-      <label className="block font-semibold mb-1">แนบรูปภาพ/วิดีโอ (ถ้ามี)</label>
-      <input
-        type="file"
-        name="file"
-        accept="image/*,video/*"
-        className="w-full p-2"
-        onChange={handleChange}
-      />
-    </div>
-
-    <hr className="my-4" />
-    <h2 className="text-lg sm:text-xl font-bold text-gray-700 mb-2">ข้อมูลผู้แจ้ง</h2>
-
-    {/* ข้อมูลผู้แจ้ง */}
-    <div>
-      <label className="block font-semibold mb-1">ชื่อ</label>
-      <input
-        type="text"
-        name="name"
-        value={formData.name}
-        className="w-full p-2 border rounded"
-        onChange={handleChange}
-      />
-    </div>
-
-    <div>
-      <label className="block font-semibold mb-1">เบอร์ติดต่อ</label>
-      <input
-        type="tel"
-        name="contact"
-        pattern="[0-9]*"
-        inputMode="numeric"
-        maxLength={10}
-        value={formData.contact || ''}
-        className="w-full p-2 border rounded"
-        onChange={(e) => {
-          const onlyNums = e.target.value.replace(/[^0-9]/g, "");
-          setFormData(prev => ({ ...prev, contact: onlyNums }));
-        }}
-      />
-    </div>
-
-    <div>
-      <label className="block font-semibold mb-1">Email</label>
-      <input
-        type="email"
-        name="email"
-        value={formData.email}
-        className="w-full p-2 border rounded"
-        onChange={handleChange}
-      />
-    </div>
-
-    <button
-      type="submit"
-      className="bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700 mt-4 w-full"
-    >
-      ส่งเรื่องแจ้งเหตุ
-    </button>
-  </form>
-</div>
-
   );
 }
