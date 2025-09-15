@@ -157,7 +157,8 @@ export default function Incident() {
 
         {/* แผนที่ */}
         {hasFetchedLocation && location.lat != null && location.lng != null ? (
-          <Map location={location} setLocation={setLocation} />
+        <MapClient location={location} setLocation={setLocation} />
+
         ) : (
           <p>กำลังโหลดแผนที่...</p>
         )}
