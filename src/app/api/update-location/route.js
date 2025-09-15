@@ -20,22 +20,27 @@ export async function POST(request) {
       return NextResponse.json({ error: "Invalid lat/lng" }, { status: 400 });
     }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: {
-          "location.lat": parsedLat,
-          "location.lng": parsedLng
-        }},
-      { new: true }
-    );
-
-    if (!user) {
+    // หา user ก่อน
+    const userDoc = await User.findById(userId);
+    if (!userDoc) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, user });
+    // ถ้า location เป็น string → แปลงเป็น object
+    if (typeof userDoc.location === "string") {
+      const [oldLat, oldLng] = userDoc.location.split(",").map(Number);
+      userDoc.location = { lat: oldLat || parsedLat, lng: oldLng || parsedLng };
+    }
+
+    // อัปเดตค่าใหม่
+    userDoc.location.lat = parsedLat;
+    userDoc.location.lng = parsedLng;
+
+    await userDoc.save();
+
+    return NextResponse.json({ success: true, user: userDoc });
   } catch (error) {
-    console.error(" Update location error:", error);
+    console.error("❌ Update location error:", error);
     return NextResponse.json({ error: "Failed to update location" }, { status: 500 });
   }
 }

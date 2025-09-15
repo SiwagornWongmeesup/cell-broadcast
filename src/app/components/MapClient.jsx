@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import 'leaflet-geosearch/dist/geosearch.css';
 import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
 
+// ตั้งค่า icon ของ marker
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -12,22 +13,24 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-export default function MapClient({ location, setLocation }) {
+export default function MapClient({ location, setLocation, showInputs = true }) {
+
+  // Component สำหรับเลือกตำแหน่งบน map
   function LocationSelector() {
     useMapEvents({
       click(e) {
         setLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
       },
     });
-    return null;
+    return null ;
   }
 
+  // Component สำหรับ search box
   function SearchBox() {
     const map = useMap();
 
     useEffect(() => {
       const provider = new OpenStreetMapProvider();
-
       const searchControl = new GeoSearchControl({
         provider,
         style: 'bar',
@@ -40,8 +43,7 @@ export default function MapClient({ location, setLocation }) {
       });
 
       map.addControl(searchControl);
-      // เมื่อค้นหาสำเร็จ ให้ตั้งค่าพิกัดใน state
-      // และแสดงตำแหน่งบนแผนที่
+
       map.on('geosearch/showlocation', (result) => {
         const { x: lng, y: lat } = result.location;
         setLocation({ lat, lng });
@@ -50,6 +52,17 @@ export default function MapClient({ location, setLocation }) {
       return () => map.removeControl(searchControl);
     }, [map]);
 
+    return null;
+  }
+
+  // Component สำหรับให้ map ขยับไปยัง location เมื่อเปลี่ยน
+  function FlyToLocation({ location }) {
+    const map = useMap();
+    useEffect(() => {
+      if (location?.lat != null && location?.lng != null) {
+        map.flyTo([location.lat, location.lng], map.getZoom());
+      }
+    }, [location, map]);
     return null;
   }
 
@@ -63,7 +76,7 @@ export default function MapClient({ location, setLocation }) {
           placeholder="Latitude"
           value={location?.lat || ''}
           onChange={(e) =>
-            setLocation({ ...location, lat: parseFloat(e.target.value) })
+            setLocation({ ...location, lat: isNaN(parseFloat(e.target.value)) ? null : parseFloat(e.target.value) })
           }
           className="border p-2 w-1/2"
         />
@@ -73,7 +86,7 @@ export default function MapClient({ location, setLocation }) {
           placeholder="Longitude"
           value={location?.lng || ''}
           onChange={(e) =>
-            setLocation({ ...location, lng: parseFloat(e.target.value) })
+            setLocation({ ...location, lng: isNaN(parseFloat(e.target.value)) ? null : parseFloat(e.target.value) })
           }
           className="border p-2 w-1/2"
         />
@@ -81,20 +94,15 @@ export default function MapClient({ location, setLocation }) {
 
       {/* แผนที่ */}
       <MapContainer
-        center={
-          location?.lat && location?.lng
-            ? [location.lat, location.lng]
-            : [13.736717, 100.523186]
-        }
+        center={location ? [location.lat, location.lng] : [13.736717, 100.523186]}
         zoom={13}
-        style={{ height: '400px' }}
+        className="w-full h-[300px] md:h-[400px] lg:h-[500px]"
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <SearchBox />
         <LocationSelector />
-        {location?.lat && location?.lng && (
-          <Marker position={[location.lat, location.lng]} />
-        )}
+        <FlyToLocation location={location} />
+        {location?.lat && location?.lng && <Marker position={[location.lat, location.lng]} />}
       </MapContainer>
     </div>
   );

@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from 'react-toastify';
 import { AuthProvider } from "./providers"; 
+import NavbarWrapper from "../../NavbarWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,11 +22,19 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <head>
+        {/* PWA meta tags */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#FF0000" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
-        {children}
+          <NavbarWrapper />
+          <main>{children}</main>
         </AuthProvider>
         <ToastContainer />
       </body>

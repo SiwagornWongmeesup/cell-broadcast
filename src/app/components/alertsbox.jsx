@@ -3,12 +3,12 @@ import React from 'react';
 import { useSession } from 'next-auth/react';
 
 const alertTypeMap = {
-  'earthquake': 'แผ่นดินไหว',
-  'volcanic': 'ภูเขาไฟระเบิด',
-  'flood': 'น้ำท่วม',
-  'measure': 'พายุ',
-  'wildfire': 'ไฟป่า',
-  'other': 'อื่นๆ',
+  'แผ่นดินไหว': 'แผ่นดินไหว',
+  'ภูเขาไฟระเบิด': 'ภูเขาไฟระเบิด',
+  'น้ำท่วม': 'น้ำท่วม',
+  'พายุ': 'พายุ',
+  'ไฟป่า': 'ไฟป่า',
+  'อื่นๆ': 'อื่นๆ',
 };
 
 export default function AlertBox({ alert, onDismiss }) {
@@ -81,9 +81,9 @@ export default function AlertBox({ alert, onDismiss }) {
           </p>
         </div>
 
-        {alert.image && (
+        {alert.fileUrl && (
           <img
-            src={alert.image}
+            src={alert.fileUrl}
             alt="alert"
             className="mt-2 rounded-md max-h-40 mx-auto"
           />

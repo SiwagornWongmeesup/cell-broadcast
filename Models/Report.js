@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
 
 const UserReportSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   title: { type: String, required: true },
-  details: { type: String, required: true },  // ใช้ details แทน description
-  location: { type: String, required: true }, // เก็บเป็น string ไปก่อน
+  details: { type: String, required: true },
+  location: {
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true },
+  },
   date: { type: String },
   time: { type: String },
   name: { type: String },

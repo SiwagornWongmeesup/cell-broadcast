@@ -109,12 +109,12 @@ const kmToMeters = (km) => Math.round(km * 1000);
             }}
           >
             <option value="">เลือกประเภทภัยพิบัติ</option>
-            <option value="earthquake">แผ่นดินไหว</option>
-            <option value="volcanic">ภูเขาไฟระเบิด</option>
-            <option value="flood">น้ำท่วม</option>
-            <option value="storm">พายุ</option>
-            <option value="wildfire">ไฟป่า</option>
-            <option value="other">อื่นๆ</option>
+            <option value="แผ่นดินไหว">แผ่นดินไหว</option>
+            <option value="ภูเขาไฟระเบิด">ภูเขาไฟระเบิด</option>
+            <option value="น้ำท่วม">น้ำท่วม</option>
+            <option value="พายุ">พายุ</option>
+            <option value="ไฟป่า">ไฟป่า</option>
+            <option value="อื่นๆ">อื่นๆ</option>
           </select>
 
           <input
@@ -125,7 +125,7 @@ const kmToMeters = (km) => Math.round(km * 1000);
             onChange={(e) => setRadius(kmToMeters(Number(e.target.value)))}
           />
 
-          <MapClient location={location} setLocation={setLocation} />
+          <MapClient location={location} setLocation={setLocation} radius={radius} />
 
           <button
             type="submit"

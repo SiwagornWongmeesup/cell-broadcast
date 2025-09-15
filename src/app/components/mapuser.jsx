@@ -3,7 +3,6 @@
 
 import { MapContainer, Marker, TileLayer, Popup, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useEffect, useState } from 'react';
 import L from 'leaflet';
 
 // ฟังก์ชันคำนวณระยะทาง (Haversine formula)

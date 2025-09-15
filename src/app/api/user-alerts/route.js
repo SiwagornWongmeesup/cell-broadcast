@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import { connectMongoDB } from '../../../../lib/mongodb';
 import Report from '../../../../Models/Report';
+import User from '../../../../Models/user';
+import cloudinary from '../../../../lib/cloudinary';
 
 export async function GET() {
   try {
     await connectMongoDB();
-    console.log("✅ MongoDB connected for GET");
     const alerts = await Report.find({}).sort({ createdAt: -1 });
     return NextResponse.json(alerts);
   } catch (error) {
-    console.error("❌ ERROR in GET /api/user-alerts:", error);
     return NextResponse.json({ error: 'Failed to fetch', details: error.message }, { status: 500 });
   }
 }
@@ -17,53 +17,61 @@ export async function GET() {
 export async function POST(req) {
   try {
     await connectMongoDB();
-    console.log("✅ MongoDB connected for POST");
 
     const formData = await req.formData();
-
-    // log formData ที่ได้รับทั้งหมด
-    console.log("All FormData entries:");
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
-
+    const title = formData.get('title');
+    const details = formData.get('details');
+    const locationRaw = formData.get('location');
+    const name = formData.get('name');
+    const contact = formData.get('contact');
+    const email = formData.get('email');
+    const date = formData.get('date');
+    const time = formData.get('time');
+    const userId = formData.get('userId');
     const file = formData.get('file');
 
-    // log เฉพาะ field หลัก
-    console.log("FormData received:", {
-      title: formData.get('title'),
-      details: formData.get('details'),
-      lat: formData.get('lat'),
-      lng: formData.get('lng'),
-      file: file ? file.name : null,
-    });
+    let location = null;
+    if (locationRaw) {
+      try {
+        location = JSON.parse(locationRaw);
+      } catch (err) {
+        console.error("Error parsing location:", err);
+      }
+    }
+
+    let fileUrl = null;
+
+    if(file && file.size > 0) {
+       const arrayBuffer = await file.arrayBuffer();
+       const buffer = Buffer.from(arrayBuffer);
+      // อัปโหลดไฟล์ไป Cloudinary
+      const result = await cloudinary.uploader.upload(
+        "data:image/png;base64," + buffer.toString("base64"),
+        { folder: 'user_alerts' }
+      );
+      fileUrl = result.secure_url;
+    }
+
 
     const report = new Report({
-      type: formData.get('title'),
-      message: formData.get('details'),
-      position: {
-        lat: parseFloat(formData.get('lat')),
-        lng: parseFloat(formData.get('lng')),
-      },
-      radius: 100,
+      title,
+      details,
+      location: location || { lat: null, lng: null },
+      userId: userId || null,
+      name: name || null,
+      contact: contact || null,
+      email: email || null,
+      date: date || null,
+      time: time || null,
+      file: file ? fileUrl : null,
       createdAt: new Date(),
     });
 
-    // log object ก่อนบันทึก
-    console.log("Report object before save:", JSON.stringify(report, null, 2));
-
     await report.save();
 
-    console.log("✅ Report saved successfully");
-    return NextResponse.json({ message: 'ส่งเรื่องเรียบร้อยแล้ว' });
+    return NextResponse.json({ message: '✅ ส่งเรื่องเรียบร้อยแล้ว' });
   } catch (err) {
-    console.error("❌ ERROR in POST /api/user-alerts:");
-    console.error("Message:", err.message);
-    console.error("Stack:", err.stack);
-
-    return NextResponse.json(
-      { error: 'Failed to submit', details: err.message },
-      { status: 500 }
-    );
+    console.error(err);
+    return NextResponse.json({ error: 'Failed to submit', details: err.message }, { status: 500 });
   }
 }

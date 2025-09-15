@@ -1,7 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Navbar from "../components/navbar";
 import { useSession } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import AlertBox from '../components/alertsbox';
@@ -77,7 +76,7 @@ export default function HomePage() {
       setMarkers(activeMarkers);
       setLatestAlert(data.latestAlert || null);
 
-      const disasterAlert = nearby.find(a => ["flood","earthquake","wildfire","volcanic","measure"].includes(a.type));
+      const disasterAlert = nearby.find(a => ["น้ำท่วม", "แผ่นดินไหว", "ไฟป่า", "พายุ", "ภูเขาไฟระเบิด", "อื่นๆ"].includes(a.type));
       setDisaster(disasterAlert ? disasterAlert.type : null);
 
     } catch (error) {
@@ -87,7 +86,7 @@ export default function HomePage() {
     }
   };
 
-  // 🔹 useEffect สำหรับ geolocation พร้อม debounce + cleanup
+  // ใช้ geolocation พร้อม debounce
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/");
@@ -117,7 +116,7 @@ export default function HomePage() {
               body: JSON.stringify({ userId: session.user.id, lat: latitude, lng: longitude })
             }).catch(err => console.error("Failed to update location:", err));
           }
-        }, 3000); // ส่งหลังผู้ใช้หยุดเคลื่อนไหว 3 วินาที
+        }, 3000);
       },
       (err) => {
         console.error("Geolocation error:", err);
@@ -125,14 +124,13 @@ export default function HomePage() {
       }
     );
 
-    // Cleanup
     return () => {
       clearTimeout(debounceTimeout);
       navigator.geolocation.clearWatch(watchId);
     };
   }, [status, session]);
 
-  // 🔹 refresh alerts ทุก 30 วินาที
+  // refresh alerts ทุก 30 วินาที
   useEffect(() => {
     if (!userLocation || !session?.user?.id) return;
 
@@ -149,27 +147,35 @@ export default function HomePage() {
   const disasterData = disaster ? disasterRecommendations[disaster] : null;
 
   return (
-    <div className="flex flex-col h-screen relative">
-      <Navbar session={session} />
-      <div className="flex flex-1">
-        <div className="w-1/2 p-4 border-r">
-          <h2 className="text-xl font-semibold mb-4">
+    <div className="flex flex-col min-h-screen relative">
+      
+      <div className="flex flex-col md:flex-row flex-1">
+        {/* ส่วนแผนที่ */}
+        <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 border-b md:border-b-0 md:border-r ">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4">
             แผนที่แจ้งเตือนสำหรับคุณ {session?.user.name}
           </h2>
-          <div className="w-full h-[500px] bg-gray-200 rounded-lg relative z-0">
+          <div className="w-full h-[250px] sm:h-[400px] md:h-[500px] bg-gray-200 rounded-lg relative z-0">
             {hasFetchedLocation && <UserMapComponent markers={markers} userLocation={userLocation} />}
           </div>
         </div>
-        <div className="w-1/2 p-4 overflow-y-auto border-l">
-          <h2 className="text-xl font-semibold mb-4">
+
+        {/* ส่วนคู่มือการรับมือ */}
+        <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 overflow-y-auto">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4">
             คู่มือการรับมือสถานการณ์
           </h2>
-          {disasterData ? <DisasterInfo title={disasterData.title} steps={disasterData.steps} /> :
-            <p>ไม่มีการแจ้งเตือนภัยพิบัติในพื้นที่</p>}
+          {disasterData ? (
+            <DisasterInfo title={disasterData.title} steps={disasterData.steps} />
+          ) : (
+            <p className="text-sm sm:text-base md:text-lg">ไม่มีการแจ้งเตือนภัยพิบัติในพื้นที่</p>
+          )}
         </div>
       </div>
+
+      {/* Alert Box ลอยกลางจอ */}
       {currentAlert && (
-        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-xl">
+        <div className="absolute top-20 sm:top-24 left-1/2 transform -translate-x-1/2 z-50 w-[95%] sm:w-[90%] md:max-w-xl">
           <AlertBox alert={currentAlert} onDismiss={handleDismissAlert} />
         </div>
       )}

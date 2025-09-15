@@ -1,18 +1,19 @@
 import mongoose from "mongoose";
 
 const alertSchema = new mongoose.Schema({
-  message: String,
-  type: String,
-  radius: Number,
+  message: { type: String, required: true },
+  type: { type: String },
+  radius: { type: Number },
   location: {
-    lat: Number,
-    lng: Number,
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true },
   },
-  createdAt: { type: Date, default: Date.now },
+  fileUrl: { type: String },
   expiresAt: { type: Date },
-  readBy: [{ type: String }], // เก็บ userId ที่อ่านแล้ว
+  readBy: [{ type: String }],
   dismissedBy: [{ type: String }],
-},{timestamps: true});
+}, { timestamps: true });
 
-const Alert = mongoose.models.Alert || mongoose.model('Alert', alertSchema);
+const Alert = mongoose.models.Alert || mongoose.model("Alert", alertSchema);
+
 export default Alert;
