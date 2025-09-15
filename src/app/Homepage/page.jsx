@@ -23,8 +23,57 @@ export default function HomePage() {
   const [markers, setMarkers] = useState([]);
   const [latestAlert, setLatestAlert] = useState(null);
   const [disaster, setDisaster] = useState(null);
+
+  // --- เพิ่มโค้ดขอพิกัดผู้ใช้แบบ watchPosition + debounce ---
   const [userLocation, setUserLocation] = useState(null);
   const [hasFetchedLocation, setHasFetchedLocation] = useState(false);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/");
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      console.error("Geolocation not supported");
+      setHasFetchedLocation(true);
+      return;
+    }
+
+    let debounceTimeout;
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => {
+          const { latitude, longitude } = pos.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+          setHasFetchedLocation(true);
+
+          // อัปเดต location ของผู้ใช้ใน backend
+          if (session?.user?.id) {
+            fetch("/api/update-location", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: session.user.id, lat: latitude, lng: longitude })
+            }).catch(err => console.error("Failed to update location:", err));
+          }
+
+          // ดึง alerts ใหม่ตามพิกัด
+          fetchAlerts(latitude, longitude);
+        }, 2000); // debounce 2 วินาที
+      },
+      (err) => {
+        console.error("Geolocation error:", err);
+        setHasFetchedLocation(true);
+      }
+    );
+
+    return () => {
+      clearTimeout(debounceTimeout);
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [status, session]);
+  // --- สิ้นสุดโค้ด watchPosition ---
 
   const handleDismissAlert = async () => {
     if (!currentAlert || !session?.user?.id) return;
@@ -86,50 +135,6 @@ export default function HomePage() {
     }
   };
 
-  // ใช้ geolocation พร้อม debounce
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.replace("/");
-      return;
-    }
-    if (!navigator.geolocation) {
-      console.error("Geolocation not supported");
-      setHasFetchedLocation(true);
-      return;
-    }
-
-    let debounceTimeout;
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        clearTimeout(debounceTimeout);
-
-        debounceTimeout = setTimeout(() => {
-          const { latitude, longitude } = pos.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-          setHasFetchedLocation(true);
-          fetchAlerts(latitude, longitude);
-
-          if (session?.user?.id) {
-            fetch("/api/update-location", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ userId: session.user.id, lat: latitude, lng: longitude })
-            }).catch(err => console.error("Failed to update location:", err));
-          }
-        }, 3000);
-      },
-      (err) => {
-        console.error("Geolocation error:", err);
-        setHasFetchedLocation(true);
-      }
-    );
-
-    return () => {
-      clearTimeout(debounceTimeout);
-      navigator.geolocation.clearWatch(watchId);
-    };
-  }, [status, session]);
-
   // refresh alerts ทุก 30 วินาที
   useEffect(() => {
     if (!userLocation || !session?.user?.id) return;
@@ -156,7 +161,7 @@ export default function HomePage() {
             แผนที่แจ้งเตือนสำหรับคุณ {session?.user.name}
           </h2>
           <div className="w-full h-[250px] sm:h-[400px] md:h-[500px] bg-gray-200 rounded-lg relative z-0">
-            {hasFetchedLocation && <UserMapComponent markers={markers} userLocation={userLocation} />}
+            {hasFetchedLocation && userLocation && <UserMapComponent markers={markers} userLocation={userLocation} />}
           </div>
         </div>
 
