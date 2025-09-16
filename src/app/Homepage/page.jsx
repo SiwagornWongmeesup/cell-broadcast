@@ -86,55 +86,23 @@ export default function HomePage() {
     }
   };
 
-  // useEffect สำหรับ GPS และ watchPosition
+  // ใช้ geolocation พร้อม debounce
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/");
       return;
     }
-
     if (!navigator.geolocation) {
-      alert("อุปกรณ์นี้ไม่รองรับ GPS");
+      console.error("Geolocation not supported");
       setHasFetchedLocation(true);
       return;
     }
 
-    // ตรวจสอบสิทธิ์ตำแหน่ง
-    navigator.permissions.query({ name: "geolocation" }).then((result) => {
-      if (result.state === "granted" || result.state === "prompt") {
-        // popup ให้ผู้ใช้อนุญาต
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const { latitude, longitude } = pos.coords;
-            setUserLocation({ lat: latitude, lng: longitude });
-            setHasFetchedLocation(true);
-            fetchAlerts(latitude, longitude);
-
-            if (session?.user?.id) {
-              fetch("/api/update-location", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: session.user.id, lat: latitude, lng: longitude })
-              }).catch(err => console.error("Failed to update location:", err));
-            }
-          },
-          (err) => {
-            alert("กรุณาอนุญาต GPS และเปิดตำแหน่งเพื่อใช้งานแผนที่");
-            setHasFetchedLocation(true);
-          }
-        );
-      } else if (result.state === "denied") {
-        // ถ้า block ไปแล้ว → แจ้งให้เปิดใน Settings
-        alert("คุณต้องเปิดสิทธิ์ตำแหน่งใน Settings ของแอปเพื่อใช้งานแผนที่");
-        setHasFetchedLocation(true);
-      }
-    });
-
-    // watchPosition สำหรับอัปเดต location ใหม่ ๆ
     let debounceTimeout;
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         clearTimeout(debounceTimeout);
+
         debounceTimeout = setTimeout(() => {
           const { latitude, longitude } = pos.coords;
           setUserLocation({ lat: latitude, lng: longitude });
@@ -173,65 +141,20 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [userLocation, session]);
 
-  if (status === 'loading' || !hasFetchedLocation) return <div className="text-center text-gray-700 text-lg mt-9">Loading map and alerts...</div>;
+  if (status === 'loading' || !hasFetchedLocation) return <div className="text-center text-gray-700 text-lg mt-20">Loading map and alerts...</div>;
   if (!session) return null;
 
   const disasterData = disaster ? disasterRecommendations[disaster] : null;
 
   return (
     <div className="flex flex-col min-h-screen relative">
+      
       <div className="flex flex-col md:flex-row flex-1">
         {/* ส่วนแผนที่ */}
         <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 border-b md:border-b-0 md:border-r ">
-           <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4">
             แผนที่แจ้งเตือนสำหรับคุณ {session?.user.name}
           </h2>
-
-        {/* ปุ่มขอสิทธิ์ตำแหน่ง */}
-        {!userLocation && (
-          <div className="absolute inset-0 flex items-center justify-center z-10">
-            <button
-              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg shadow-lg hover:bg-blue-700 transition"
-              onClick={() => {
-                if (!navigator.geolocation) {
-                  alert("อุปกรณ์นี้ไม่รองรับ GPS");
-                  return;
-                }
-
-                navigator.geolocation.getCurrentPosition(
-                  (pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    console.log("User Location:", latitude, longitude);
-                    setUserLocation({ lat: latitude, lng: longitude });
-                    setHasFetchedLocation(true);
-                    fetchAlerts(latitude, longitude);
-
-                    if (session?.user?.id) {
-                      fetch("/api/update-location", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ userId: session.user.id, lat: latitude, lng: longitude }),
-                      }).catch(err => console.error("Failed to update location:", err));
-                    }
-                  },
-                  (err) => {
-                    console.error("Geolocation error:", err);
-                    alert("กรุณาอนุญาต GPS และเปิดตำแหน่งเพื่อใช้งานแผนที่");
-                  },
-                  { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
-              }}
-            >
-              ใช้ตำแหน่งปัจจุบัน
-            </button>
-          </div>
-        )}
-
-        {/* แผนที่ */}
-        <div className="w-full h-[250px] sm:h-[400px] md:h-[500px] bg-gray-200 rounded-lg relative z-0">
-          {hasFetchedLocation && <UserMapComponent markers={markers} userLocation={userLocation} />}
-        </div>
-          
           <div className="w-full h-[250px] sm:h-[400px] md:h-[500px] bg-gray-200 rounded-lg relative z-0">
             {hasFetchedLocation && <UserMapComponent markers={markers} userLocation={userLocation} />}
           </div>
