@@ -23,61 +23,8 @@ export default function HomePage() {
   const [markers, setMarkers] = useState([]);
   const [latestAlert, setLatestAlert] = useState(null);
   const [disaster, setDisaster] = useState(null);
-
-  // --------------------- START: เพิ่มส่วนขอพิกัด ---------------------
   const [userLocation, setUserLocation] = useState(null);
   const [hasFetchedLocation, setHasFetchedLocation] = useState(false);
-  const [permissionState, setPermissionState] = useState(null);
-
-  const requestLocation = () => {
-    if (!navigator.geolocation) {
-      alert("อุปกรณ์ไม่รองรับ Geolocation");
-      setHasFetchedLocation(true);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude
-        });
-        setHasFetchedLocation(true);
-      },
-      (err) => {
-        console.warn("ไม่สามารถเข้าถึงตำแหน่ง:", err.message);
-        alert("กรุณาเปิด GPS และอนุญาตให้แอพเข้าถึงตำแหน่ง");
-        setHasFetchedLocation(true);
-      }
-    );
-  };
-
-  useEffect(() => {
-    if (!navigator.permissions) {
-      requestLocation();
-      return;
-    }
-
-    navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-      setPermissionState(result.state);
-
-      if (result.state === 'granted') {
-        requestLocation();
-      } else if (result.state === 'prompt') {
-        requestLocation();
-      } else if (result.state === 'denied') {
-        alert("กรุณาไปเปิดสิทธิ์ตำแหน่งในตั้งค่าแอพของคุณ");
-      }
-
-      result.onchange = () => {
-        setPermissionState(result.state);
-        if (result.state === 'granted') {
-          requestLocation();
-        }
-      };
-    });
-  }, []);
-  // --------------------- END: เพิ่มส่วนขอพิกัด ---------------------
 
   const handleDismissAlert = async () => {
     if (!currentAlert || !session?.user?.id) return;
@@ -139,23 +86,55 @@ export default function HomePage() {
     }
   };
 
-  // ใช้ geolocation พร้อม debounce
+  // useEffect สำหรับ GPS และ watchPosition
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/");
       return;
     }
+
     if (!navigator.geolocation) {
-      console.error("Geolocation not supported");
+      alert("อุปกรณ์นี้ไม่รองรับ GPS");
       setHasFetchedLocation(true);
       return;
     }
 
+    // ตรวจสอบสิทธิ์ตำแหน่ง
+    navigator.permissions.query({ name: "geolocation" }).then((result) => {
+      if (result.state === "granted" || result.state === "prompt") {
+        // popup ให้ผู้ใช้อนุญาต
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const { latitude, longitude } = pos.coords;
+            setUserLocation({ lat: latitude, lng: longitude });
+            setHasFetchedLocation(true);
+            fetchAlerts(latitude, longitude);
+
+            if (session?.user?.id) {
+              fetch("/api/update-location", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: session.user.id, lat: latitude, lng: longitude })
+              }).catch(err => console.error("Failed to update location:", err));
+            }
+          },
+          (err) => {
+            alert("กรุณาอนุญาต GPS และเปิดตำแหน่งเพื่อใช้งานแผนที่");
+            setHasFetchedLocation(true);
+          }
+        );
+      } else if (result.state === "denied") {
+        // ถ้า block ไปแล้ว → แจ้งให้เปิดใน Settings
+        alert("คุณต้องเปิดสิทธิ์ตำแหน่งใน Settings ของแอปเพื่อใช้งานแผนที่");
+        setHasFetchedLocation(true);
+      }
+    });
+
+    // watchPosition สำหรับอัปเดต location ใหม่ ๆ
     let debounceTimeout;
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         clearTimeout(debounceTimeout);
-
         debounceTimeout = setTimeout(() => {
           const { latitude, longitude } = pos.coords;
           setUserLocation({ lat: latitude, lng: longitude });
@@ -194,14 +173,13 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [userLocation, session]);
 
-  if (status === 'loading' || !hasFetchedLocation) return <div>Loading map and alerts...</div>;
+  if (status === 'loading' || !hasFetchedLocation) return <div className="text-center text-gray-700 text-lg mt-20">Loading map and alerts...</div>;
   if (!session) return null;
 
   const disasterData = disaster ? disasterRecommendations[disaster] : null;
 
   return (
     <div className="flex flex-col min-h-screen relative">
-      
       <div className="flex flex-col md:flex-row flex-1">
         {/* ส่วนแผนที่ */}
         <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 border-b md:border-b-0 md:border-r ">
@@ -209,15 +187,7 @@ export default function HomePage() {
             แผนที่แจ้งเตือนสำหรับคุณ {session?.user.name}
           </h2>
           <div className="w-full h-[250px] sm:h-[400px] md:h-[500px] bg-gray-200 rounded-lg relative z-0">
-            {hasFetchedLocation && userLocation ? (
-              <UserMapComponent markers={markers} userLocation={userLocation} />
-            ) : (
-              <p className="text-center mt-4">
-                {permissionState === 'denied'
-                  ? "กรุณาเปิดสิทธิ์ตำแหน่งในตั้งค่าแอพ"
-                  : "กำลังดึงตำแหน่ง..."}
-              </p>
-            )}
+            {hasFetchedLocation && <UserMapComponent markers={markers} userLocation={userLocation} />}
           </div>
         </div>
 
@@ -240,16 +210,6 @@ export default function HomePage() {
           <AlertBox alert={currentAlert} onDismiss={handleDismissAlert} />
         </div>
       )}
-
-      {/* ปุ่มดึงตำแหน่งอีกครั้ง */}
-      <div className="mt-4 text-center">
-        <button
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          onClick={requestLocation}
-        >
-          ดึงตำแหน่งอีกครั้ง
-        </button>
-      </div>
     </div>
   );
 }
