@@ -141,7 +141,7 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [userLocation, session]);
 
-  if (status === 'loading' || !hasFetchedLocation) return <div className="text-center text-gray-700 text-lg mt-20">Loading map and alerts...</div>;
+  if (status === 'loading' || !hasFetchedLocation) return <div className="text-center text-gray-700 text-lg mt-8">Loading map and alerts...</div>;
   if (!session) return null;
 
   const disasterData = disaster ? disasterRecommendations[disaster] : null;

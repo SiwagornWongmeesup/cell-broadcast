@@ -4,7 +4,6 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
 
 export default function AdminLayout({ children }) {
   const { data: session, status } = useSession();
@@ -22,22 +21,17 @@ export default function AdminLayout({ children }) {
   }, [session, status, router]);
 
   if (status === 'loading') {
-    return <div>กำลังโหลดข้อมูล...</div>;
+    return <div className="text-center text-gray-700 text-lg mt-8">กำลังโหลดข้อมูล...</div>;
   }
 
   if (!session || session.user.role !== 'admin') {
     return null;
   }
 
-  // Layout ของ Admin
+  
   return (
-    <div className="flex flex-col h-screen ">
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-6 bg-gray-100">
-          {children}
-        </main>
-      </div>
-    </div>
+    <main>
+      {children}
+    </main>
   );
 }
