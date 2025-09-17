@@ -7,7 +7,6 @@ import { useState } from 'react';
 
 export default function Sidebar({ session }) {
   const pathname = usePathname();
-
   const [openSubmenus, setOpenSubmenus] = useState({});
 
   const toggleSubmenu = (menuName) => {
@@ -42,11 +41,11 @@ export default function Sidebar({ session }) {
     },
   ];
 
-  // ฟังก์ชันตรวจสอบว่าหน้านี้เป็น active
   const isActive = (href) => href && pathname.startsWith(href);
 
   return (
-    <aside className="w-64 bg-gray-800 text-white p-4 flex flex-col shadow-lg">
+    // ซ่อนบนมือถือ, แสดงบน Desktop
+    <aside className="hidden md:flex md:flex-col w-64 bg-gray-800 text-white p-4 shadow-lg min-h-screen">
       {/* ส่วนบน */}
       <div className="text-2xl font-bold mb-8 text-blue-300">
         <Link href="/admin/dashboard">{session?.user?.name || 'Admin Dashboard'}</Link>
@@ -75,8 +74,13 @@ export default function Sidebar({ session }) {
                     }`}
                   >
                     <span className="font-semibold">{item.name}</span>
-                    <svg className={`w-4 h-4 transition-transform duration-200 ${openSubmenus[item.name] ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                    <svg
+                      className={`w-4 h-4 transition-transform duration-200 ${openSubmenus[item.name] ? 'rotate-90' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
                   {openSubmenus[item.name] && (
