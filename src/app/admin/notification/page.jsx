@@ -73,24 +73,23 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar: แสดงเฉพาะ md+ และยาวเต็มหน้าจอ */}
+      {/* Sidebar: แสดงเฉพาะ md+ */}
       <div className="hidden md:flex md:flex-col md:w-64 bg-gray-800 text-white">
-        <Sidebar />
+        <Sidebar session={session} />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-4">
-        {/* Layout: flex-col มือถือ, flex-row Desktop */}
+      <div className="flex-1 p-4 pt-20 md:pt-4">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Map */}
-          <div className="md:w-2/3 w-full h-96 md:h-[600px] bg-gray-200 rounded overflow-hidden">
+          <div className="md:w-2/3 w-full max-h-[60vh] md:h-[600px] bg-gray-200 rounded overflow-hidden">
             <MapClient location={location} setLocation={setLocation} radius={radius} />
           </div>
 
           {/* Form */}
           <form
             onSubmit={handleSubmit}
-            className="md:w-1/3 w-full p-4 bg-white rounded shadow space-y-4"
+            className="md:w-1/3 w-full max-h-[60vh] md:h-[600px] p-4 bg-white rounded shadow space-y-4 overflow-auto"
           >
             <h2 className="text-xl font-bold">ส่งแจ้งเตือน</h2>
 
