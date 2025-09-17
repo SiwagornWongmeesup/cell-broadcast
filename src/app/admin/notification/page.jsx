@@ -1,3 +1,4 @@
+// pages/admin/dashboard.jsx
 'use client';
 
 import { useSession } from 'next-auth/react';
@@ -71,27 +72,53 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar: แสดงเฉพาะ md+ */}
+      {/* Sidebar */}
       <div className="hidden md:flex md:flex-col md:w-64 bg-gray-800 text-white">
         <Sidebar session={session} />
       </div>
 
       {/* Main Content */}
       <div className="flex-1 p-2 md:p-4">
-        <div className="flex flex-col md:flex-row gap-4 min-h-screen">
-        {/* Map */}
-          <div className="w-full md:w-2/3 bg-gray-200 rounded overflow-hidden 
-                          h-64 sm:h-72 md:h-[600px]">
-            <MapClient location={location} setLocation={setLocation} radius={radius} />
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Map */}
+          <div className="flex-1 bg-gray-200 rounded overflow-hidden min-h-[300px] md:min-h-[600px]">
+            <MapClient location={location} setLocation={setLocation} />
           </div>
 
           {/* Form */}
           <form
             onSubmit={handleSubmit}
-            className="w-full md:w-1/3 p-4 bg-white rounded shadow flex flex-col space-y-3 
-                      overflow-auto h-64 sm:h-72 md:h-[600px]"
+            className="flex flex-col gap-3 p-4 bg-white rounded shadow flex-shrink-0 w-full md:w-[350px] min-h-[300px] md:min-h-[600px]"
           >
             <h2 className="text-xl font-bold">ส่งแจ้งเตือน</h2>
+
+            <input
+              type="number"
+              step="0.000001"
+              placeholder="Latitude"
+              value={location?.lat || ''}
+              onChange={(e) =>
+                setLocation((prev) => ({
+                  ...prev,
+                  lat: isNaN(parseFloat(e.target.value)) ? null : parseFloat(e.target.value),
+                }))
+              }
+              className="border p-2 rounded w-full"
+            />
+            <input
+              type="number"
+              step="0.000001"
+              placeholder="Longitude"
+              value={location?.lng || ''}
+              onChange={(e) =>
+                setLocation((prev) => ({
+                  ...prev,
+                  lng: isNaN(parseFloat(e.target.value)) ? null : parseFloat(e.target.value),
+                }))
+              }
+              className="border p-2 rounded w-full"
+            />
+
             <textarea
               className="w-full border p-2 rounded resize-none"
               rows={3}
