@@ -1,18 +1,16 @@
-import { connectMongoDB } from '../../../../../lib/mongodb';
+import { connectMongoDB } from '../../../../lib/mongodb';
 import bcrypt from 'bcryptjs';
-import User from '../../../../../Models/user';
+import User from '../../../../Models/user';
 
 export async function POST(req) {
   try {
     const { token, password } = await req.json();
-    if (!token || !password) {
-      return Response.json({ error: 'ข้อมูลไม่ครบ' }, { status: 400 });
-    }
+    if (!token || !password) return Response.json({ error: 'ข้อมูลไม่ครบ' }, { status: 400 });
 
     await connectMongoDB();
 
     const user = await User.findOne({ resetToken: token });
-    if (!user || user.resetTokenExpiry.getTime() < Date.now()) {
+    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry.getTime() < Date.now()) {
       return Response.json({ error: 'ลิงก์หมดอายุหรือไม่ถูกต้อง' }, { status: 400 });
     }
 
