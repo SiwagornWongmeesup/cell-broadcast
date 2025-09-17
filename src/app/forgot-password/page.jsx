@@ -12,7 +12,7 @@ export default function ForgotPassword() {
     setError('');
 
     try {
-      const res = await fetch('/api/forgot-password', {
+      const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,16 +35,16 @@ export default function ForgotPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-4">Forgot Password</h2>
+        <h2 className="text-2xl font-bold text-center mb-4">ลืมรหัสผ่าน</h2>
 
         {success ? (
-          <p className="text-green-600 text-center">Reset link sent to your email.</p>
+          <p className="text-green-600 text-center">ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลของคุณแล้ว</p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {error && <p className="text-red-600 text-sm text-center">{error}</p>}
             <input
               type="email"
-              placeholder="Enter your email"
+              placeholder="กรอกอีเมลของคุณ"
               className="border border-gray-300 p-3 rounded-md"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -54,7 +54,7 @@ export default function ForgotPassword() {
               type="submit"
               className="bg-orange-500 text-white py-2 rounded-md hover:bg-orange-600"
             >
-              Send Reset Link
+               ส่งลิงก์รีเซ็ตรหัสผ่าน
             </button>
           </form>
         )}
