@@ -1,11 +1,9 @@
-// pages/admin/dashboard.jsx
 'use client';
 
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import Sidebar from '../../components/Sidebar';
 
 const MapClient = dynamic(() => import('../../components/MapClient'), { ssr: false });
 
@@ -52,7 +50,8 @@ export default function Dashboard() {
         setLocation(null);
       } else {
         const data = await res.json();
-        alert('เกิดข้อผิดพลาด: ' + (data?.error || 'ไม่ทราบสาเหตุ'));
+        const errorMessage = data?.error || 'ไม่ทราบสาเหตุ';
+        alert('เกิดข้อผิดพลาด: ' + errorMessage);
       }
     } catch (error) {
       alert('เกิดข้อผิดพลาด: ' + error.message);
@@ -63,6 +62,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (status === 'loading') return;
+
     if (!session) router.replace('/login');
     else if (session.user.role !== 'admin') router.replace('/Homepage');
   }, [session, status, router]);
@@ -71,94 +71,63 @@ export default function Dashboard() {
   if (!session || session.user.role !== 'admin') return null;
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className="hidden md:flex md:flex-col md:w-64 bg-gray-800 text-white">
-        <Sidebar session={session} />
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 p-2 md:p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Map */}
-          <div className="flex-1 bg-gray-200 rounded overflow-hidden min-h-[300px] md:min-h-[600px]">
-            <MapClient location={location} setLocation={setLocation} />
-          </div>
-
-          {/* Form */}
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-3 p-4 bg-white rounded shadow flex-shrink-0 w-full md:w-[350px] min-h-[300px] md:min-h-[600px]"
-          >
-            <h2 className="text-xl font-bold">ส่งแจ้งเตือน</h2>
-
-            <input
-              type="number"
-              step="0.000001"
-              placeholder="Latitude"
-              value={location?.lat || ''}
-              onChange={(e) =>
-                setLocation((prev) => ({
-                  ...prev,
-                  lat: isNaN(parseFloat(e.target.value)) ? null : parseFloat(e.target.value),
-                }))
-              }
-              className="border p-2 rounded w-full"
-            />
-            <input
-              type="number"
-              step="0.000001"
-              placeholder="Longitude"
-              value={location?.lng || ''}
-              onChange={(e) =>
-                setLocation((prev) => ({
-                  ...prev,
-                  lng: isNaN(parseFloat(e.target.value)) ? null : parseFloat(e.target.value),
-                }))
-              }
-              className="border p-2 rounded w-full"
-            />
-
-            <textarea
-              className="w-full border p-2 rounded resize-none"
-              rows={3}
-              placeholder="ข้อความแจ้งเตือน"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-            <select
-              className="w-full border p-2 rounded"
-              value={type}
-              onChange={(e) => {
-                const selectedType = e.target.value;
-                setType(selectedType);
-                setRadius(defaultRadius[selectedType] || 3000);
-              }}
-            >
-              <option value="">เลือกประเภทภัยพิบัติ</option>
-              <option value="แผ่นดินไหว">แผ่นดินไหว</option>
-              <option value="ภูเขาไฟระเบิด">ภูเขาไฟระเบิด</option>
-              <option value="น้ำท่วม">น้ำท่วม</option>
-              <option value="พายุ">พายุ</option>
-              <option value="ไฟป่า">ไฟป่า</option>
-              <option value="อื่นๆ">อื่นๆ</option>
-            </select>
-            <input
-              type="number"
-              className="w-full border p-2 rounded"
-              placeholder="รัศมี (กิโลเมตร)"
-              value={metersToKm(radius)}
-              onChange={(e) => setRadius(kmToMeters(Number(e.target.value)))}
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50 w-full"
-            >
-              {loading ? 'กำลังส่ง...' : 'ส่งแจ้งเตือน'}
-            </button>
-          </form>
+    <div className="min-h-screen bg-gray-100 p-4">
+      {/* Layout แนวนอนบน Desktop, แนวตั้งบนมือถือ */}
+      <div className="flex flex-col md:flex-row gap-4">
+        {/* Map ทางซ้าย */}
+        <div className="md:w-2/3 w-full h-96 md:h-[600px] bg-gray-200 rounded overflow-hidden">
+          <MapClient location={location} setLocation={setLocation} radius={radius} />
         </div>
+
+        {/* Form ทางขวา */}
+        <form
+          onSubmit={handleSubmit}
+          className="md:w-1/3 w-full p-4 bg-white rounded shadow space-y-4"
+        >
+          <h2 className="text-xl font-bold">ส่งแจ้งเตือน</h2>
+
+          <textarea
+            className="w-full border p-2 rounded"
+            rows={3}
+            placeholder="ข้อความแจ้งเตือน"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+
+          <select
+            className="w-full border p-2 rounded"
+            value={type}
+            onChange={(e) => {
+              const selectedType = e.target.value;
+              setType(selectedType);
+              setRadius(defaultRadius[selectedType] || 3000);
+            }}
+          >
+            <option value="">เลือกประเภทภัยพิบัติ</option>
+            <option value="แผ่นดินไหว">แผ่นดินไหว</option>
+            <option value="ภูเขาไฟระเบิด">ภูเขาไฟระเบิด</option>
+            <option value="น้ำท่วม">น้ำท่วม</option>
+            <option value="พายุ">พายุ</option>
+            <option value="ไฟป่า">ไฟป่า</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
+
+          <input
+            type="number"
+            className="w-full border p-2 rounded"
+            placeholder="รัศมี (กิโลเมตร)"
+            value={metersToKm(radius)}
+            onChange={(e) => setRadius(kmToMeters(Number(e.target.value)))}
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50 w-full"
+          >
+            {loading ? 'กำลังส่ง...' : 'ส่งแจ้งเตือน'}
+          </button>
+        </form>
       </div>
     </div>
   );
