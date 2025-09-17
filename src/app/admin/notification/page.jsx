@@ -51,8 +51,7 @@ export default function Dashboard() {
         setLocation(null);
       } else {
         const data = await res.json();
-        const errorMessage = data?.error || 'ไม่ทราบสาเหตุ';
-        alert('เกิดข้อผิดพลาด: ' + errorMessage);
+        alert('เกิดข้อผิดพลาด: ' + (data?.error || 'ไม่ทราบสาเหตุ'));
       }
     } catch (error) {
       alert('เกิดข้อผิดพลาด: ' + error.message);
@@ -63,7 +62,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (status === 'loading') return;
-
     if (!session) router.replace('/login');
     else if (session.user.role !== 'admin') router.replace('/Homepage');
   }, [session, status, router]);
@@ -79,28 +77,28 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 pt-20 md:pt-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Map */}
-          <div className="md:w-2/3 w-full max-h-[60vh] md:h-[600px] bg-gray-200 rounded overflow-hidden">
+      <div className="flex-1 p-2 md:p-4">
+        <div className="flex flex-col md:flex-row gap-4 min-h-screen">
+        {/* Map */}
+          <div className="w-full md:w-2/3 bg-gray-200 rounded overflow-hidden 
+                          h-64 sm:h-72 md:h-[600px]">
             <MapClient location={location} setLocation={setLocation} radius={radius} />
           </div>
 
           {/* Form */}
           <form
             onSubmit={handleSubmit}
-            className="md:w-1/3 w-full max-h-[60vh] md:h-[600px] p-4 bg-white rounded shadow space-y-4 overflow-auto"
+            className="w-full md:w-1/3 p-4 bg-white rounded shadow flex flex-col space-y-3 
+                      overflow-auto h-64 sm:h-72 md:h-[600px]"
           >
             <h2 className="text-xl font-bold">ส่งแจ้งเตือน</h2>
-
             <textarea
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded resize-none"
               rows={3}
               placeholder="ข้อความแจ้งเตือน"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
-
             <select
               className="w-full border p-2 rounded"
               value={type}
@@ -118,7 +116,6 @@ export default function Dashboard() {
               <option value="ไฟป่า">ไฟป่า</option>
               <option value="อื่นๆ">อื่นๆ</option>
             </select>
-
             <input
               type="number"
               className="w-full border p-2 rounded"
@@ -126,7 +123,6 @@ export default function Dashboard() {
               value={metersToKm(radius)}
               onChange={(e) => setRadius(kmToMeters(Number(e.target.value)))}
             />
-
             <button
               type="submit"
               disabled={loading}
