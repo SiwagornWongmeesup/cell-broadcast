@@ -1,5 +1,5 @@
-import { connectMongoDB } from '../../../../lib/mongodb';
-import User from '../../../../Models/user';
+import { connectMongoDB } from '../../../../../lib/mongodb';
+import User from '../../../../../Models/user';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
@@ -20,7 +20,7 @@ export async function POST(req) {
     user.resetTokenExpiry = resetTokenExpiry;
     await user.save();
 
-    const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${resetToken}`;
+    const resetLink = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`;
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',

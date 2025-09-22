@@ -1,6 +1,6 @@
-import { connectMongoDB } from '../../../../lib/mongodb';
+import { connectMongoDB } from '../../../../../lib/mongodb';
 import bcrypt from 'bcryptjs';
-import User from '../../../../Models/user';
+import User from '../../../../../Models/user';
 
 export async function POST(req) {
   try {
@@ -10,7 +10,7 @@ export async function POST(req) {
     await connectMongoDB();
 
     const user = await User.findOne({ resetToken: token });
-    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry.getTime() < Date.now()) {
+    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < Date.now()) {
       return Response.json({ error: 'ลิงก์หมดอายุหรือไม่ถูกต้อง' }, { status: 400 });
     }
 
