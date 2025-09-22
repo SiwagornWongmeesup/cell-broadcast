@@ -58,7 +58,6 @@ export default function IncidentPage() {
     if (!hasFetchedLocation) fetchLocation();
   }, [hasFetchedLocation]);
 
-  // ปุ่มรีเฟรชตำแหน่ง
   const handleRefreshLocation = () => {
     setHasFetchedLocation(false);
   };
@@ -125,15 +124,15 @@ export default function IncidentPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white p-4 sm:p-6 rounded-2xl shadow-md mt-6">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-center text-red-600">
+    <div className="max-w-3xl mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-2xl shadow-md mt-6">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-red-600">
         แจ้งเหตุการณ์
       </h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* เลือกประเภทภัยพิบัติ */}
         <select
           name="title"
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded focus:ring-2 focus:ring-red-400"
           value={formData.title}
           onChange={handleChange}
           required
@@ -148,11 +147,11 @@ export default function IncidentPage() {
         </select>
 
         {/* Map */}
-        <div className="w-full h-[300px] sm:h-[400px] md:h-[500px] bg-gray-200 rounded-lg overflow-hidden relative z-0">
+        <div className="w-full h-[250px] sm:h-[350px] md:h-[450px] bg-gray-200 rounded-lg overflow-hidden relative">
           {hasFetchedLocation && location ? (
             <MapClient location={location} setLocation={setLocation} showInputs={false} />
           ) : (
-            <p className="text-center mt-4">กรุณาเปิดใช้งานตำแหน่ง</p>
+            <p className="text-center mt-4 text-gray-500">กรุณาเปิดใช้งานตำแหน่ง</p>
           )}
         </div>
 
@@ -197,7 +196,7 @@ export default function IncidentPage() {
             name="details"
             rows={4}
             value={formData.details}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-red-400"
             onChange={handleChange}
             required
           />
@@ -211,7 +210,7 @@ export default function IncidentPage() {
               type="date"
               name="date"
               value={formData.date}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-red-400"
               onChange={handleChange}
               required
             />
@@ -222,7 +221,7 @@ export default function IncidentPage() {
               type="time"
               name="time"
               value={formData.time}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-red-400"
               onChange={handleChange}
               required
             />
@@ -236,7 +235,7 @@ export default function IncidentPage() {
             type="file"
             name="file"
             accept="image/*,video/*"
-            className="w-full p-2"
+            className="w-full p-2 border rounded"
             onChange={handleChange}
           />
         </div>
@@ -251,7 +250,7 @@ export default function IncidentPage() {
             type="text"
             name="name"
             value={formData.name}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-red-400"
             onChange={handleChange}
           />
         </div>
@@ -265,7 +264,7 @@ export default function IncidentPage() {
             inputMode="numeric"
             maxLength={10}
             value={formData.contact || ''}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-red-400"
             onChange={(e) => {
               const onlyNums = e.target.value.replace(/[^0-9]/g, "");
               setFormData(prev => ({ ...prev, contact: onlyNums }));
@@ -279,14 +278,15 @@ export default function IncidentPage() {
             type="email"
             name="email"
             value={formData.email}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded focus:ring-2 focus:ring-red-400"
             onChange={handleChange}
           />
         </div>
 
         <button
           type="submit"
-          className="bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700 mt-4 w-full"
+          className="bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700 mt-4 w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!formData.name || !formData.contact || !formData.email || !location?.lat || !location?.lng || !formData.title}
         >
           ส่งเรื่องแจ้งเหตุ
         </button>
