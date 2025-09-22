@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation'; // Next.js App Router
+import { useRouter } from 'next/navigation';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const searchParams = useSearchParams();
   const token = searchParams.get('token'); // ดึง token จาก URL
@@ -30,6 +32,9 @@ export default function ResetPassword() {
 
       if (res.ok) {
         setSuccess(true);
+        setTimeout(() => {
+          router.push('/'); // ไปหน้า login
+        }, 2000); // รอ 2 วินาที
       } else {
         const data = await res.json();
         setError(data.error || 'เกิดข้อผิดพลาด');
@@ -47,8 +52,9 @@ export default function ResetPassword() {
 
         {success ? (
           <p className="text-green-600 text-center text-sm sm:text-base">
-            รีเซ็ตรหัสผ่านเรียบร้อย สามารถล็อกอินได้เลย
+            รีเซ็ตรหัสผ่านเรียบร้อย สามารถล็อกอินได้เลย 
           </p>
+          
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {error && <p className="text-red-600 text-sm text-center">{error}</p>}

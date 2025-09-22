@@ -12,7 +12,9 @@ export default function NavbarWrapper() {
 
   useEffect(() => {
     if (status !== "loading" && (!session || !session.user)) {
-      router.push("/"); // redirect client-side
+      if (!pathname.startsWith('/reset-password')) {
+        router.push("/"); // redirect client-side
+      }
     }
   }, [session, status, router]);
 

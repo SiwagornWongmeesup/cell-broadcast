@@ -64,7 +64,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (status === 'loading') return;
 
-    if (!session) router.replace('/login');
+    if (!session) router.replace('/');
     else if (session.user.role !== 'admin') router.replace('/Homepage');
   }, [session, status, router]);
 
