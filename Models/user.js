@@ -44,6 +44,10 @@ const userSchema = new Schema(
         TokenExpires: {
             type: Date,
         }, 
+        resetToken: {  
+            type: String,
+        },
+        resetTokenExpiry: { type: Date },
     },
     {timestamps: true}
 )

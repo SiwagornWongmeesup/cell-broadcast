@@ -22,7 +22,7 @@ function Login() {
     if (session) {
       if (session.user.role === 'admin') {
         router.replace('/admin/dashboard');
-      } else {
+      } else {  
         router.replace('/Homepage');
       }
     }
