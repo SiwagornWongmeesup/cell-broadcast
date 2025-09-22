@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 
-
 function Navbar({ session }) { 
   const pathname = usePathname();
   const isActive = (path) => pathname.toLowerCase().startsWith(path.toLowerCase());
@@ -51,18 +50,22 @@ function Navbar({ session }) {
         <ul className={`flex-col md:flex-row md:flex space-y-2 md:space-y-0 md:space-x-4 absolute md:static top-20 left-0 w-full md:w-auto bg-black md:bg-transparent p-4 md:p-0 transition-all duration-300 z-100 ${isMobileMenuOpen ? 'flex' : 'hidden md:flex'}`}>
           {!session ? (
             <>
-              <li><Link href='/' className='hover:text-gray-300 transition-colors duration-200'>Sign in</Link></li>
-              <li><Link href='/register' className='hover:text-gray-300 transition-colors duration-200'>Sign Up</Link></li>
+              <li>
+                <Link href='/' onClick={() => setIsMobileMenuOpen(false)} className='hover:text-gray-300 transition-colors duration-200'>Sign in</Link>
+              </li>
+              <li>
+                <Link href='/register' onClick={() => setIsMobileMenuOpen(false)} className='hover:text-gray-300 transition-colors duration-200'>Sign Up</Link>
+              </li>
             </>
           ) : (
             <>
               <li>
-                <Link href='/Homepage' className={`flex items-center px-1 py-1 rounded-md hover:text-gray-300 transition-colors duration-200 ${isActive('/Homepage') ? 'underline underline-offset-4' : ''}`}>
+                <Link href='/Homepage' onClick={() => setIsMobileMenuOpen(false)} className={`flex items-center px-1 py-1 rounded-md hover:text-gray-300 transition-colors duration-200 ${isActive('/Homepage') ? 'underline underline-offset-4' : ''}`}>
                   หน้าหลัก
                 </Link>
               </li>
               <li>
-                <Link href='/incident' className={`flex items-center px-1 py-1 rounded-md hover:text-gray-300 transition-colors duration-200 ${isActive('/incident') ? 'bg-green-600 border' : ''}`}>
+                <Link href='/incident' onClick={() => setIsMobileMenuOpen(false)} className={`flex items-center px-1 py-1 rounded-md hover:text-gray-300 transition-colors duration-200 ${isActive('/incident') ? 'bg-green-600 border' : ''}`}>
                   แจ้งเหตุ
                 </Link>
               </li>
@@ -85,10 +88,10 @@ function Navbar({ session }) {
                 </button>
                 {isDropdownOpen && (
                   <div className="absolute left-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-10">
-                    <Link href='/manual/level' className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/manual/level') ? 'bg-gray-600' : ''}`}>ข่าวสาร</Link>
-                    <Link href='/Copingguide' className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/Copingguide') ? 'bg-gray-600' : ''}`}>คู่มือรับมือ</Link>
-                    <Link href='/manual/level' className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/manual/level') ? 'bg-gray-600' : ''}`}>ระดับการแจ้งเตือน</Link>
-                    <Link href='/Contact' className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/Contact') ? 'bg-gray-600' : ''}`}>ติดต่อเรา</Link>
+                    <Link href='/manual/level' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/manual/level') ? 'bg-gray-600' : ''}`}>ข่าวสาร</Link>
+                    <Link href='/Copingguide' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/Copingguide') ? 'bg-gray-600' : ''}`}>คู่มือรับมือ</Link>
+                    <Link href='/manual/level' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/manual/level') ? 'bg-gray-600' : ''}`}>ระดับการแจ้งเตือน</Link>
+                    <Link href='/Contact' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/Contact') ? 'bg-gray-600' : ''}`}>ติดต่อเรา</Link>
                   </div>
                 )}
               </li>
@@ -111,14 +114,14 @@ function Navbar({ session }) {
                 </button>
                 {isAccountDropdownOpen && (
                   <div className="absolute left-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-10">
-                    <Link href='/alertshistory' className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/alertshistory') ? 'bg-gray-600' : ''}`}>ประวัติการแจ้งเตือน</Link>
-                    <Link href='/profile' className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/profile') ? 'bg-gray-600' : ''}`}>โปรไฟล์</Link>
+                    <Link href='/alertshistory' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/alertshistory') ? 'bg-gray-600' : ''}`}>ประวัติการแจ้งเตือน</Link>
+                    <Link href='/profile' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/profile') ? 'bg-gray-600' : ''}`}>โปรไฟล์</Link>
                   </div>
                 )}
               </li>
 
               <li>
-                <a onClick={() => signOut()} className='flex items-center bg-red-500 border text-white px-1 py-1 rounded-md hover:bg-red-600 transition-colors duration-200 cursor-pointer'>
+                <a onClick={() => { setIsMobileMenuOpen(false); signOut(); }} className='flex items-center bg-red-500 border text-white px-1 py-1 rounded-md hover:bg-red-600 transition-colors duration-200 cursor-pointer'>
                   Logout
                 </a>
               </li>
