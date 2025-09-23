@@ -31,7 +31,7 @@ function Navbar({ session }) {
   }, []);
 
   return (
-    <nav className='bg-black text-white p-5 z-50'>
+    <nav className='bg-black text-white p-5 z-50 relative'>
       <div className="container mx-auto flex items-center justify-between">
         <div>
           <img src="/Logo.png" alt="" className="h-18 w-18" />
@@ -87,7 +87,7 @@ function Navbar({ session }) {
                   </svg>
                 </button>
                 {isDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-10">
+                  <div className="absolute left-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-50">
                     <Link href='/manual/level' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/manual/level') ? 'bg-gray-600' : ''}`}>ข่าวสาร</Link>
                     <Link href='/Copingguide' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/Copingguide') ? 'bg-gray-600' : ''}`}>คู่มือรับมือ</Link>
                     <Link href='/manual/level' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/manual/level') ? 'bg-gray-600' : ''}`}>ระดับการแจ้งเตือน</Link>
