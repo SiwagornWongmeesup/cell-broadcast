@@ -153,7 +153,7 @@ function Login() {
             <p className="text-center text-sm sm:text-base">
               ยังไม่มีบัญชีผู้ใช้?
               <Link
-                className="text-rose-900 hover:underline pl-1.5"
+                className="text-rose-600 hover:text-rose-700 hover:underline pl-1.5"
                 href="/register"
               >
                 ลงทะเบียน

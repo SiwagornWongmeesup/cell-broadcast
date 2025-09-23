@@ -28,6 +28,7 @@ export const authOptions = {
             name: user.name,
             email: user.email,
             role: user.role,
+            phone: user.phone, 
             isVerified: user.isVerified, 
           };
         } catch (error) {
@@ -49,8 +50,9 @@ export const authOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
-        token.id = user.id;
+        token.id = user.id;   
         token.isVerified = user.isVerified; // เก็บสถานะไว้ใน token
+        token.phone = user.phone;
       }
       return token;
     },
@@ -58,6 +60,8 @@ export const authOptions = {
       if (token?.role) session.user.role = token.role;
       if (token?.isVerified !== undefined) session.user.isVerified = token.isVerified;
       if (token?.id) session.user.id = token.id;
+      session.user.phone = token.phone || null;
+      
       return session;
     }
   },

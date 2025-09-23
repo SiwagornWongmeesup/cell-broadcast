@@ -116,7 +116,7 @@ export default function HomePage() {
               body: JSON.stringify({ userId: session.user.id, lat: latitude, lng: longitude })
             }).catch(err => console.error("Failed to update location:", err));
           }
-        }, 3000);
+        }, 2000); // debounce 2s
       },
       (err) => {
         console.error("Geolocation error:", err);
@@ -141,37 +141,55 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [userLocation, session]);
 
-  if (status === 'loading' || !hasFetchedLocation) return <div className="text-center text-gray-700 text-lg mt-8">Loading map and alerts...</div>;
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen ">
+        <div className="text-lg sm:text-xl font-semibold text-white p-6 sm:p-8 bg-red-700 rounded-lg shadow-lg">
+          กำลังโหลดข้อมูล...
+        </div>
+      </div>
+    );
+  }
+
   if (!session) return null;
 
   const disasterData = disaster ? disasterRecommendations[disaster] : null;
 
   return (
-    <div className="flex flex-col min-h-screen relative">
+    <div className="flex flex-col min-h-screen relative bg-gradient-to-b from-black via-gray-900 to-red-900">
       
-      <div className="flex flex-col md:flex-row flex-1">
-        {/* ส่วนแผนที่ */}
-        <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 border-b md:border-b-0 md:border-r ">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4">
+      <div className="flex flex-col md:flex-row flex-1 ">
+        {/* Map */}
+      {/* Map */}
+        <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 border-b md:border-b-0 md:border-r border-red-700 flex-shrink-0">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">
             แผนที่แจ้งเตือนสำหรับคุณ {session?.user.name}
           </h2>
-          <div className="w-full h-[250px] sm:h-[400px] md:h-[500px] bg-gray-200 rounded-lg relative z-0">
-            {hasFetchedLocation && <UserMapComponent markers={markers} userLocation={userLocation} />}
-          </div>
+          <div className="w-full h-64 sm:h-80 md:h-[500px] bg-gray-800 rounded-lg relative overflow-hidden z-0">
+            {hasFetchedLocation && (
+              <div className="absolute inset-0">
+                <UserMapComponent markers={markers} userLocation={userLocation} />
+              </div>
+            )}
+          </div>    
         </div>
 
-        {/* ส่วนคู่มือการรับมือ */}
-        <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 overflow-y-auto pt-27">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4">
+
+        {/* คู่มือ */}
+        <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 overflow-y-auto mt-4 md:mt-0 flex-1 relative z-10">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">
             คู่มือการรับมือสถานการณ์
           </h2>
           {disasterData ? (
             <DisasterInfo title={disasterData.title} steps={disasterData.steps} />
           ) : (
-            <p className="text-sm sm:text-base md:text-lg">ไม่มีการแจ้งเตือนภัยพิบัติในพื้นที่</p>
+            <p className="text-sm sm:text-base md:text-lg text-gray-100">
+              ไม่มีการแจ้งเตือนภัยพิบัติในพื้นที่
+            </p>
           )}
         </div>
       </div>
+
 
       {/* Alert Box ลอยกลางจอ */}
       {currentAlert && (
