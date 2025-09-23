@@ -31,7 +31,10 @@ export async function POST(req) {
       message,
       type,
       radius,
-      location,
+      location : {
+        lat: location.lat,
+        lng: location.lng
+      },  
       fileUrl: fileUrl || null, 
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // หมดอายุ 24 ชั่วโมง
       readBy: [],

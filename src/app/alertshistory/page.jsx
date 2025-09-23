@@ -98,15 +98,20 @@ export default function AlertsHistoryPage() {
                   </p>
                 </div>
 
-                {/* Map */}
-                <div className="h-48 sm:h-56 md:h-64 w-full mt-2">
-                  {alert.latitude && alert.longitude && (
-                    <UserMapComponent
-                      markers={[{ lat: alert.latitude, lng: alert.longitude }]}
-                      center={{ lat: alert.latitude, lng: alert.longitude }}
-                    />
-                  )}
-                </div>
+               {/* Map */}
+              <div className="relative w-full aspect-video mt-2 rounded-lg overflow-hidden">
+                {alert.location?.lat && alert.location?.lng ? (
+                  <UserMapComponent
+                    markers={[{ lat: alert.location.lat, lng: alert.location.lng }]}
+                    center={{ lat: alert.location.lat, lng: alert.location.lng }}
+                  />
+                ) : (
+                  <p className="text-gray-500 text-xs sm:text-sm flex items-center justify-center h-full">
+                    ไม่มีข้อมูลแผนที่
+                  </p>
+                )}
+              </div>
+
               </div>
             ))}
           </div>

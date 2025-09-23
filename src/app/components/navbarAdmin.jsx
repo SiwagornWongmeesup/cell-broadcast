@@ -138,7 +138,7 @@ export default function NavbarAdmin({ session }) {
                             className={`block px-3 py-2 rounded-md transition-colors ${
                               isActive(sub.href) ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
                             }`}
-                            onClick={() => setMenuOpen(false)} // ✅ ปิดเมนูหลังคลิก submenu
+                            onClick={() => setMenuOpen(false)} 
                           >
                             {sub.name}
                           </Link>
