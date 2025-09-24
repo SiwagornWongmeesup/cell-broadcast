@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Sidebar from '../../components/Sidebar'; // import Sidebar
+import { set } from 'mongoose';
 
 const MapClient = dynamic(() => import('../../components/MapClient'), { ssr: false });
 
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [radius, setRadius] = useState(500);
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [sendEmail, setSendEmail] = useState(false);
 
   const defaultRadius = {
     earthquake: 3000,
@@ -41,7 +43,7 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ message, type, radius, location }),
+        body: JSON.stringify({ message, type, radius, location, sendEmail }),  
       });
       if (res.ok) {
         alert('ส่งแจ้งเตือนสำเร็จ');
@@ -49,6 +51,7 @@ export default function Dashboard() {
         setType('');
         setRadius(500);
         setLocation(null);
+        setSendEmail(false);
       } else {
         const data = await res.json();
         const errorMessage = data?.error || 'ไม่ทราบสาเหตุ';
@@ -123,6 +126,15 @@ export default function Dashboard() {
             value={metersToKm(radius)}
             onChange={(e) => setRadius(kmToMeters(Number(e.target.value)))}
           />
+
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={sendEmail}
+              onChange={e => setSendEmail(e.target.checked)}
+            />
+            ส่งทางอีเมล
+          </label>
 
           <button
             type="submit"

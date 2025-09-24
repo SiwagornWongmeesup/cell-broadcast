@@ -13,25 +13,34 @@ export default function EditProfilePage() {
     bio: '',
     instagram: '',
     phone: '',
-    image: ''
+    profileImage: ''
   });
 
   const [preview, setPreview] = useState('');
 
   // โหลดข้อมูลจาก session
   useEffect(() => {
-    if (session?.user) {
-      setForm({
-        name: session.user.name || '',
-        image: session.user.image || '',
-        address: session.user.address || '',
-        bio: session.user.bio || '',
-        instagram: session.user.instagram || '',
-        phone: session.user.phone || ''
-      });
-      setPreview(session.user.image || '');
-    }
-  }, [session]);
+      if (status !== 'authenticated') return;
+   const fetchProfile = async () => {
+      try {
+        const res = await fetch(`/api/profile?userId=${session.user.id}`);
+        const data = await res.json();
+        if (res.ok) {
+          setForm({
+            name: session.user.name || '',
+            phone: session.user.phone || '',
+            ...data.profile, // bio, address, instagram, image
+          });
+          setPreview(data.profile?.profileImage || session.user.profileImage || '');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  
+    fetchProfile();
+  }, [session?.user?.id]);
+  
 
   if (status === 'loading') {
     return <p className="text-center text-gray-500">กำลังโหลด...</p>;
@@ -53,7 +62,7 @@ export default function EditProfilePage() {
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreview(reader.result); // preview รูป
-      setForm({ ...form, image: reader.result }); // เก็บ base64 ไว้ส่ง API
+      setForm({ ...form, profileImage: reader.result }); // เก็บ base64 ไว้ส่ง API
     };
     reader.readAsDataURL(file);
   };
@@ -61,7 +70,7 @@ export default function EditProfilePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/profile/update', {
+      const res = await fetch('/api/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: session.user.id, ...form })

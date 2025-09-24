@@ -6,6 +6,7 @@ import User from "../../../../Models/user";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import UserProfile from "../../../../Models/profile";
 
 export async function POST(request) {
   try {
@@ -32,15 +33,23 @@ export async function POST(request) {
     const verificationUrl = `http://localhost:3000/verify?token=${verificationToken}`;
 
     console.log("Creating user in MongoDB...");
-    await User.create({
+    const newUser = await User.create({
       name,
       email: email.toLowerCase().trim(),
       password: hashedPassword,
-      phone,
+      phone,  
       location,
       role,
       verificationToken,
       isVerified: false
+    });
+
+    await UserProfile.create({
+      userId: newUser._id,
+      bio: "",
+      address: "",
+      instagram: "",
+      profileImage: ""
     });
 
     console.log("Setting up email transporter...");

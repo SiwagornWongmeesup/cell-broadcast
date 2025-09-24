@@ -53,7 +53,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <Sidebar className="w-64 h-screen" />
 
       {/* Main content */}
@@ -115,6 +114,14 @@ export default function AdminDashboard() {
                         >
                           {a.status}
                         </span>
+
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                           
+                          />
+                          ส่งทางอีเมล
+                        </label>
 
                         <button
                           className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
