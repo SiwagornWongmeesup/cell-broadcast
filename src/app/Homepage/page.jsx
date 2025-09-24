@@ -134,13 +134,19 @@ export default function HomePage() {
   // refresh alerts ทุก 30 วินาที
   useEffect(() => {
     if (!userLocation || !session?.user?.id) return;
-
+    
     const interval = setInterval(() => {
       fetchAlerts(userLocation.lat, userLocation.lng);
     }, 30000);
 
     return () => clearInterval(interval);
   }, [userLocation, session]);
+
+  useEffect(() => {
+    if (session?.user?.name) {
+      setUserName(session.user.name);
+    }
+  }, [session?.user?.name]);
 
   if (status === 'loading') {
     return (
