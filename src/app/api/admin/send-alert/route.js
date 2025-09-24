@@ -29,58 +29,31 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
-    // สร้าง alert ใน MongoDB ก่อน
+    // สร้าง alert ใน MongoDB
     const alert = await Alert.create({
       message,
       type,
       radius,
-      location : {
-        lat: location.lat,
-        lng: location.lng
-      },  
+      location: { lat: location.lat, lng: location.lng },
       fileUrl: fileUrl || null, 
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // หมดอายุ 24 ชั่วโมง
       readBy: [],
       dismissedBy: [],
     });
 
-      // Haversine formula
-  function getDistance(lat1, lng1, lat2, lng2) {
-    const R = 6371000; // meters
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(lat1 * Math.PI / 180) *
-      Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-    async function SendAlertEmail(message, type, location, radius) {
-      
-      const users = await User.find({ lat: { $exists: true }, lng: { $exists: true } });
-      
-      const nearbyUsers = users.filter(user => {
-        const distance = getDistance(location.lat, location.lng, user.lat, user.lng);
-        return distance <= radius;
-      });
-      
-      const recipients =  nearbyUsers.map(u => u.email).filter(Boolean);
-    
+    async function SendAlertEmail(message, type, location) {
+      const users = await User.find({ email: { $exists: true } });
+      const recipients = users.map(u => u.email).filter(Boolean);
       if (!recipients.length) return;
-    
-      // 2. สร้าง transporter Nodemailer
+
       const transporter = Nodemailer.createTransport({
-        service: 'gmail', // หรือใช้ SMTP ของคุณ
+        service: 'gmail',
         auth: {
           user: process.env.GMAIL_USER,
           pass: process.env.GMAIL_PASS,
         },
       });
-    
-      // 3. ส่งอีเมล
+
       await transporter.sendMail({
         from: process.env.GMAIL_USER,
         to: recipients.join(','),
@@ -88,11 +61,10 @@ export async function POST(req) {
         text: `${message}\nLocation: ${location.lat}, ${location.lng}`,
       });
     }
-    
-    // ถ้าเลือกส่งอีเมล ให้เรียกฟังก์ชันส่งอีเมล
+
     if (sendEmail) {
       try {
-        await SendAlertEmail(message, type, location, radius); // ต้องสร้างฟังก์ชันนี้
+        await SendAlertEmail(message, type, location);
       } catch (emailErr) {
         console.error('Error sending alert email:', emailErr);
       }

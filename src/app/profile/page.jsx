@@ -116,7 +116,7 @@ export default function ProfilePage() {
             แก้ไขโปรไฟล์
           </button>
           <button
-            onClick={() => router.push('/reset-password')}
+            onClick={() => router.push('/change-password')}
             className="w-full sm:w-1/2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg shadow-md"
           >
             เปลี่ยนรหัสผ่าน

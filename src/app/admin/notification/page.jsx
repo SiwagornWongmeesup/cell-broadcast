@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Sidebar from '../../components/Sidebar'; // import Sidebar
-import { set } from 'mongoose';
 
 const MapClient = dynamic(() => import('../../components/MapClient'), { ssr: false });
 

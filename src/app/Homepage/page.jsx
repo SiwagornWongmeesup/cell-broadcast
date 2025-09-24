@@ -25,6 +25,7 @@ export default function HomePage() {
   const [disaster, setDisaster] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [hasFetchedLocation, setHasFetchedLocation] = useState(false);
+  const [userName, setUserName] = useState(session?.user.name);
 
   const handleDismissAlert = async () => {
     if (!currentAlert || !session?.user?.id) return;
@@ -163,7 +164,7 @@ export default function HomePage() {
       {/* Map */}
         <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 border-b md:border-b-0 md:border-r border-red-700 flex-shrink-0">
           <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">
-            แผนที่แจ้งเตือนสำหรับคุณ {session?.user.name}
+            แผนที่แจ้งเตือนสำหรับคุณ  {userName}
           </h2>
           <div className="w-full h-64 sm:h-80 md:h-[500px] bg-gray-800 rounded-lg relative overflow-hidden z-0">
             {hasFetchedLocation && (
