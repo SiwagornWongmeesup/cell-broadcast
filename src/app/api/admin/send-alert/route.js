@@ -15,30 +15,13 @@ async function connectDB() {
   await mongoose.connect(MONGODB_URL);
 }
 
-// ฟังก์ชันคำนวณระยะทาง (Haversine formula)
-function getDistance(lat1, lng1, lat2, lng2) {
-  const R = 6371000; // meters
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
 // ฟังก์ชันส่งอีเมลแจ้งเตือน
-async function sendAlertEmail(message, type, location, radius, createdAt) {
+// ฟังก์ชันส่งอีเมลแจ้งเตือน (ไม่กรองระยะทาง)
+async function sendAlertEmail(message, type, location, createdAt) {
+  // ดึงผู้ใช้ที่มี lat/lng และ email
   const users = await User.find({ lat: { $exists: true }, lng: { $exists: true } });
+  const recipients = users.map(u => u.email).filter(Boolean);
 
-  const nearbyUsers = users.filter(user => {
-    const distance = getDistance(location.lat, location.lng, user.lat, user.lng);
-    return distance <= radius;
-  });
-
-  const recipients = nearbyUsers.map(u => u.email).filter(Boolean);
   if (!recipients.length) return;
 
   const alertTime = createdAt
@@ -77,6 +60,7 @@ Location: ${location.lat}, ${location.lng}
 ${stepsText}`,
   });
 }
+
 
 // Main POST handler
 export async function POST(req) {
