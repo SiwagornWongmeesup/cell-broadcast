@@ -31,7 +31,16 @@ function getDistance(lat1, lng1, lat2, lng2) {
 // ฟังก์ชันส่งอีเมลแจ้งเตือน พร้อมคู่มือและวันที่
 async function SendAlertEmail(message, type, location, createdAt, radius) {
   // แปลง radius เป็นเมตรถ้าเล็กกว่า 100 (สมมติหน่วยเป็น km)
-  const adjustedRadius = radius < 100 ? radius * 1000 : radius;
+  let adjustedRadius;
+  if (radius < 1) {
+    adjustedRadius = radius * 1000; // km -> m
+  } else {
+    adjustedRadius = radius;
+  }
+
+  // กำหนด minimum radius เผื่อใกล้ ๆ กันมาก ๆ
+  const MIN_RADIUS = 50; // 50 เมตร
+  adjustedRadius = Math.max(adjustedRadius, MIN_RADIUS);
 
   const users = await User.find({ lat: { $exists: true }, lng: { $exists: true } });
 
