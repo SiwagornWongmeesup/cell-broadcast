@@ -15,60 +15,27 @@ async function connectDB() {
   if (mongoose.connections[0].readyState === 1) return;
   await mongoose.connect(MONGODB_URL);
 }
-function getDistance(lat1, lng1, lat2, lng2) {
-  const R = 6371000; // meters
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // ระยะทาง (เมตร)
-}
+
 
 // ฟังก์ชันส่งอีเมลแจ้งเตือน พร้อมคู่มือและวันที่
-async function SendAlertEmail(message, type, location, createdAt, radius) {
-  // แปลง radius เป็นเมตรถ้าเล็กกว่า 100 (สมมติหน่วยเป็น km)
-  let adjustedRadius;
-  if (radius < 1) {
-    adjustedRadius = radius * 1000; // km -> m
-  } else {
-    adjustedRadius = radius;
-  }
+async function SendAlertEmail(message, type, location, createdAt) {
+  const users = await User.find({});
+  const recipients = users.map(u => u.email).filter(Boolean);
+  if (!recipients.length) return;
 
-  // กำหนด minimum radius เผื่อใกล้ ๆ กันมาก ๆ
-  const MIN_RADIUS = 50; // 50 เมตร
-  adjustedRadius = Math.max(adjustedRadius, MIN_RADIUS);
-
-  const users = await User.find({ lat: { $exists: true }, lng: { $exists: true } });
-
-  const nearbyUsers = users.filter(user => {
-    const distance = getDistance(location.lat, location.lng, user.lat, user.lng);
-    console.log(`User: ${user.email}, Distance: ${distance.toFixed(1)}m, Radius: ${adjustedRadius}m`);
-    return distance <= adjustedRadius;
-  });
-
-  const recipients = nearbyUsers.map(u => u.email).filter(Boolean);
-
-  if (!recipients.length) {
-    console.log('⚠️ ไม่มีผู้ใช้ใกล้พอที่จะส่งอีเมล');
-    return;
-  }
-
+  // แปลงวันที่แจ้งเตือนเป็น string
   const alertTime = createdAt
-    ? new Date(createdAt).toLocaleString('th-TH', {
-        timeZone: 'Asia/Bangkok',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      })
-    : '';
-
+    ? new Date(createdAt).toLocaleString('th-TH', { 
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+: '';
+  // ดึงคู่มือการรับมือจาก disasterRecommendations
   const disasterData = disasterRecommendations[type];
   let stepsText = '';
   if (disasterData) {
@@ -93,8 +60,7 @@ Location: ${location.lat}, ${location.lng}
 คู่มือการรับมือ:
 ${stepsText}`,
   });
-
-  console.log(`✅ ส่งอีเมลไปยัง: ${recipients.join(', ')}`);}
+}
 
 // Main POST handler
 export async function POST(req) {
@@ -128,7 +94,7 @@ export async function POST(req) {
     // ถ้าเลือกส่งอีเมล
     if (sendEmail) {
       try {
-        await SendAlertEmail(message, type, location, radius, alert.createdAt);
+        await SendAlertEmail(message, type, location, alert.createdAt);
       } catch (emailErr) {
         console.error('Error sending alert email:', emailErr);
       }
