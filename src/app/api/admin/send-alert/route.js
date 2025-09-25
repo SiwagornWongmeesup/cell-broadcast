@@ -24,11 +24,13 @@ export async function POST(req) {
     await connectDB();
 
     const body = await req.json();
-    const { message, type, radius, location, fileUrl, sendEmail } = body;
+    const { message, type, radius, location, fileUrl, sendEmail,  } = body;
 
     if (!message || !location) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
+
+    if (radius < 100) radius = radius * 1000; // ถ้า radius < 100 ถือว่าเป็น km
 
     // สร้าง alert ใน MongoDB ก่อน
     const alert = await Alert.create({

@@ -7,6 +7,7 @@ const MapAdmin = dynamic(() => import("../../components/MapAdmin"), { ssr: false
 
 export default function AdminDashboard() {
   const [alerts, setAlerts] = useState([]);
+  const [sendEmailMap, setSendEmailMap] = useState({});
 
   const fetchAlerts = async () => {
     try {
@@ -33,15 +34,17 @@ export default function AdminDashboard() {
         body: JSON.stringify({
           message: report.details,
           type: report.title,
-          radius: 500,
+          radius: 3000,
           location: report.location,
           fileUrl: report.file || null,
+          sendEmail: sendEmailMap[report._id] || false,
         }),
       });
-
+     
       const data = await res.json();
       if (res.ok) {
         alert("✅ ส่งต่อไปยังผู้ใช้แล้ว");
+        setSendEmailMap(prev => ({ ...prev, [report._id]: false }));
       } else {
         alert("❌ ส่งต่อไม่สำเร็จ: " + data.error);
       }
@@ -118,7 +121,8 @@ export default function AdminDashboard() {
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
-                           
+                            checked={sendEmailMap[a._id] || false}
+                            onChange={e =>  setSendEmailMap(prev => ({ ...prev, [a._id]: e.target.checked }))}
                           />
                           ส่งทางอีเมล
                         </label>
