@@ -35,7 +35,7 @@ export default function AlertBox({ alert, onDismiss }) {
       body: JSON.stringify({ alertId, userId: session.user.id }),
     });
 
-    // เรียก onDismiss ที่มาจาก parent (เพื่อลบออกจาก UI)
+  
     if (onDismiss) onDismiss(alertId);
   };
 

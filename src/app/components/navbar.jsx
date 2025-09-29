@@ -34,7 +34,9 @@ function Navbar({ session }) {
     <nav className='bg-black text-white p-5 z-50 relative'>
       <div className="container mx-auto flex items-center justify-between">
         <div>
+          <a href="/Homepage">
           <img src="/Logo.png" alt="" className="h-18 w-18" />
+          </a>
         </div>
 
         {/* Hamburger สำหรับมือถือ */}

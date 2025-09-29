@@ -1,1 +1,10 @@
 @import "tailwindcss";
+.alert-fade-container {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 1;
+  }
+  
+  .alert-fade-container.dismissed {
+    opacity: 0;
+    transform: translateY(-20px);
+  }

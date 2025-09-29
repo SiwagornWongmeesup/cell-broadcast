@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic';
 import AlertBox from '../components/alertsbox';
 import DisasterInfo from '../components/disasterinfo';
 import { disasterRecommendations } from '../components/Data/disasterData';
-
 // Dynamic Import สำหรับ MapUser
 const UserMapComponent = dynamic(() => import('../components/mapuser'), {
   ssr: false,
@@ -21,36 +20,40 @@ export default function HomePage() {
   const [currentAlert, setCurrentAlert] = useState(null);
   const [alertQueue, setAlertQueue] = useState([]);
   const [markers, setMarkers] = useState([]);
-  const [latestAlert, setLatestAlert] = useState(null);
-  const [disaster, setDisaster] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [hasFetchedLocation, setHasFetchedLocation] = useState(false);
-  const [userName, setUserName] = useState(session?.user.name);
+  const [dismissed, setDismissed] = useState(false); 
 
-  const handleDismissAlert = async () => {
+  const [handbookQueue, setHandbookQueue] = useState([]);
+  const [currentHandbook, setCurrentHandbook] = useState(null);
+
+  const handleDismissAlert = () => {
     if (!currentAlert || !session?.user?.id) return;
 
-    try {
-      await fetch(`/api/alerts/dismiss`, {
+    setTimeout(() => {
+      const nextQueue = alertQueue.filter(a => a._id !== currentAlert._id);
+      const dismissedAlert = currentAlert;
+
+      
+      setCurrentAlert(nextQueue[0] || null);
+      setAlertQueue(nextQueue.slice(1));
+      setDismissed(false);
+
+      // Fire-and-forget fetch ไป backend
+      fetch(`/api/alerts/dismiss`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          alertId: currentAlert._id,
+          alertId: dismissedAlert._id,
           userId: session.user.id
         })
-      });
-    } catch (error) {
-      console.error("Dismiss alert error:", error);
-    }
-
-    const nextQueue = alertQueue.filter(a => a._id !== currentAlert._id);
-    setCurrentAlert(nextQueue[0] || null);
-    setAlertQueue(nextQueue.slice(1));
+      }).catch(err => console.error("Dismiss alert error:", err));
+    }, 300); 
   };
 
   const fetchAlerts = async (latitude, longitude) => {
     if (!session?.user?.id) return;
-
+  
     try {
       const res = await fetch(`/api/alerts?lat=${latitude}&lng=${longitude}&userId=${session.user.id}`);
       if (!res.ok) throw new Error("Network error");
@@ -75,17 +78,27 @@ export default function HomePage() {
           expireAt: alert.expireAt
         }));
       setMarkers(activeMarkers);
-      setLatestAlert(data.latestAlert || null);
 
-      const disasterAlert = nearby.find(a => ["น้ำท่วม", "แผ่นดินไหว", "ไฟป่า", "พายุ", "ภูเขาไฟระเบิด", "อื่นๆ"].includes(a.type));
-      setDisaster(disasterAlert ? disasterAlert.type : null);
+      const disasterAlerts = nearby.filter(a => ["น้ำท่วม", "แผ่นดินไหว", "ไฟป่า", "พายุ", "ภูเขาไฟระเบิด", "อื่นๆ"].includes(a.type));
+      setHandbookQueue(disasterAlerts);
+      setCurrentHandbook(disasterAlerts[0] || null);
+  } catch (error) {
+    console.error("Fetch alerts error:", error);
+    setAlerts([]); setCurrentAlert(null); setAlertQueue([]);
+    setMarkers([]); setHandbookQueue([]); setCurrentHandbook(null);
+  }
+};  
+const handleCloseHandbook = () => {
+  if (!currentHandbook) return;
 
-    } catch (error) {
-      console.error("Fetch alerts error:", error);
-      setAlerts([]); setCurrentAlert(null); setAlertQueue([]);
-      setMarkers([]); setLatestAlert(null); setDisaster(null);
-    }
-  };
+   // ลบ marker ของคู่มือปัจจุบัน
+  setMarkers(prev => prev.filter(m => m.id !== currentHandbook._id));
+
+  // แสดงคู่มือต่อไปใน queue
+  const currentIndex = handbookQueue.findIndex(h => h._id === currentHandbook._id);
+  const nextHandbook = handbookQueue[currentIndex + 1] || null;
+  setCurrentHandbook(nextHandbook);
+};
 
   // ใช้ geolocation พร้อม debounce
   useEffect(() => {
@@ -117,7 +130,7 @@ export default function HomePage() {
               body: JSON.stringify({ userId: session.user.id, lat: latitude, lng: longitude })
             }).catch(err => console.error("Failed to update location:", err));
           }
-        }, 2000); // debounce 2s
+        }, 2000);
       },
       (err) => {
         console.error("Geolocation error:", err);
@@ -142,12 +155,6 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [userLocation, session]);
 
-  useEffect(() => {
-    if (session?.user?.name) {
-      setUserName(session.user.name);
-    }
-  }, [session?.user?.name]);
-
   if (status === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-screen ">
@@ -160,17 +167,15 @@ export default function HomePage() {
 
   if (!session) return null;
 
-  const disasterData = disaster ? disasterRecommendations[disaster] : null;
-
+ 
   return (
     <div className="flex flex-col min-h-screen relative bg-gradient-to-b from-black via-gray-900 to-red-900">
       
       <div className="flex flex-col md:flex-row flex-1 ">
         {/* Map */}
-      {/* Map */}
         <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 border-b md:border-b-0 md:border-r border-red-700 flex-shrink-0">
           <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">
-            แผนที่แจ้งเตือนสำหรับคุณ  {userName}
+            แผนที่แจ้งเตือนสำหรับคุณ {session?.user.name};
           </h2>
           <div className="w-full h-64 sm:h-80 md:h-[500px] bg-gray-800 rounded-lg relative overflow-hidden z-0">
             {hasFetchedLocation && (
@@ -181,14 +186,14 @@ export default function HomePage() {
           </div>    
         </div>
 
-
         {/* คู่มือ */}
         <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 overflow-y-auto mt-4 md:mt-0 flex-1 relative z-10">
           <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">
             คู่มือการรับมือสถานการณ์
           </h2>
-          {disasterData ? (
-            <DisasterInfo title={disasterData.title} steps={disasterData.steps} />
+          
+          {currentHandbook ? (
+            <DisasterInfo title={disasterRecommendations[currentHandbook.type]?.title} steps={disasterRecommendations[currentHandbook.type]?.steps} onclose={handleCloseHandbook}/>
           ) : (
             <p className="text-sm sm:text-base md:text-lg text-gray-100">
               ไม่มีการแจ้งเตือนภัยพิบัติในพื้นที่
@@ -197,12 +202,20 @@ export default function HomePage() {
         </div>
       </div>
 
-
       {/* Alert Box ลอยกลางจอ */}
       {currentAlert && (
-        <div className="absolute top-20 sm:top-24 left-1/2 transform -translate-x-1/2 z-50 w-[95%] sm:w-[90%] md:max-w-xl">
-          <AlertBox alert={currentAlert} onDismiss={handleDismissAlert} />
-        </div>
+        <>
+          <div className="absolute top-20 sm:top-24 left-1/2 transform -translate-x-1/2 z-50 w-[95%] sm:w-[90%] md:max-w-xl alert-fade-container">
+            <AlertBox alert={currentAlert} onDismiss={handleDismissAlert} dismissed={dismissed} />
+          </div>
+
+          {/* แสดงจำนวน alert คงเหลือ */}
+          {alertQueue.length > 0 && (
+            <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-40 bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-md">
+              มี {alertQueue.length} แจ้งเตือนรออ่าน
+            </div>
+          )}
+        </>
       )}
     </div>
   );

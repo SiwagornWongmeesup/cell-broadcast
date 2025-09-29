@@ -11,22 +11,44 @@ const UserMapComponent = dynamic(() => import('../components/mapuser'), {
 });
 
 export default function AlertsHistoryPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
+
   const [allDisasterAlerts, setAllDisasterAlerts] = useState([]);
   const [filterType, setFilterType] = useState('all');
   const [markers, setMarkers] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
 
-  // ✅ ดึงข้อมูล alerts
+  // ดึง location ของผู้ใช้
   useEffect(() => {
-    if (!session || session.user.role !== 'user') {
+    if (status === 'unauthenticated') {
       router.push('/');
       return;
     }
 
+    if (!navigator.geolocation) {
+      console.error('Geolocation not supported');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      (err) => console.error('Geolocation error:', err)
+    );
+  }, [status, router]);
+
+  // ดึง alert จาก API
+  useEffect(() => {
+    if (!session || !userLocation) return;
+
     const fetchAlerts = async () => {
       try {
-        const res = await fetch(`/api/alerts?userId=${session.user.id}`);
+        const res = await fetch(
+          `/api/alerts?lat=${userLocation.lat}&lng=${userLocation.lng}`
+        );
+        if (!res.ok) throw new Error('Network response was not ok');
         const data = await res.json();
         setAllDisasterAlerts(data.allDisasterAlerts || []);
       } catch (err) {
@@ -35,31 +57,34 @@ export default function AlertsHistoryPage() {
     };
 
     fetchAlerts();
-  }, [session, router]);
+  }, [session, userLocation]);
 
-  // ✅ สร้าง markers
+  // สร้าง markers สำหรับ map
   useEffect(() => {
     const newMarkers = allDisasterAlerts
-      .map(alert => ({
-        ...alert,
+      .map((alert) => ({
+        id: alert._id,
         lat: alert.location?.lat,
         lng: alert.location?.lng,
+        type: alert.type,
+        message: alert.message,
+        radius: alert.radius,
       }))
-      .filter(a => a.lat && a.lng);
+      .filter((a) => a.lat && a.lng);
 
     setMarkers(newMarkers);
   }, [allDisasterAlerts]);
 
-  const filteredAlerts = allDisasterAlerts.filter(alert =>
-    filterType === 'all' ? true : alert.type === filterType
+  const filteredAlerts = allDisasterAlerts.filter(
+    (alert) => filterType === 'all' || alert.type === filterType
   );
 
-  const alertTypes = ['all', ...new Set(allDisasterAlerts.map(a => a.type))];
+  const alertTypes = ['all', ...new Set(allDisasterAlerts.map((a) => a.type))];
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-black via-gray-900 to-red-900 px-2 sm:px-4 md:px-8 lg:px-16 py-4 text-gray-100">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-black via-gray-900 to-red-900 px-4 py-4 text-gray-100">
       <div className="max-w-[1600px] mx-auto w-full">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 text-center sm:text-left text-red-600">
+        <h2 className="text-3xl md:text-4xl font-bold mb-6 text-center sm:text-left text-red-600">
           รายละเอียดการแจ้งเตือน
         </h2>
 
@@ -81,12 +106,14 @@ export default function AlertsHistoryPage() {
 
         {/* Alerts */}
         {filteredAlerts.length === 0 ? (
-          <p className="text-gray-400 text-center sm:text-left">ยังไม่มีการแจ้งเตือน</p>
+          <p className="text-gray-400 text-center sm:text-left">
+            ยังไม่มีการแจ้งเตือน
+          </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredAlerts.map((alert, index) => (
+            {filteredAlerts.map((alert) => (
               <div
-                key={index}
+                key={alert._id}
                 className="flex flex-col justify-between p-4 bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition duration-200"
               >
                 <div className="mb-2">

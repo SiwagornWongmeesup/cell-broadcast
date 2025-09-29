@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { connectMongoDB } from "../../../../lib/mongodb";
 import Alert from '../../../../Models/Alerts';
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route"; 
 
 // ฟังก์ชันคำนวณระยะทาง (Haversine Formula)
 function getDistance(lat1, lng1, lat2, lng2) {
@@ -25,9 +27,15 @@ export async function GET(req) {
     const now = new Date();
     const { searchParams } = new URL(req.url);
 
+    // ดึง session
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id || session?.user?.role !== 'user') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = session.user.id;
     const lat = parseFloat(searchParams.get('lat'));
     const lng = parseFloat(searchParams.get('lng'));
-    const userId = searchParams.get('userId'); // หรือใช้ session.user.id ถ้าใช้ auth
 
     if (isNaN(lat) || isNaN(lng)) {
       return NextResponse.json({ error: 'Invalid latitude or longitude' }, { status: 400 });
@@ -36,28 +44,31 @@ export async function GET(req) {
     // ดึง alert ที่ยังไม่หมดอายุ
     const allDisasterAlerts = await Alert.find({ expiresAt: { $gt: now } });
 
-    // แจ้งเตือนล่าสุดที่ยังไม่อ่านโดย user
-    const latestAlert = await Alert.findOne({
-      readBy: { $ne: userId },
-      expiresAt: { $gt: now }
-    }).sort({ createdAt: -1 });
-
     // แจ้งเตือนใกล้เคียง
     const nearbyAlerts = allDisasterAlerts
-      .filter(alert => alert.location) // มี location
-      .filter(alert => userId && !alert.readBy?.includes(userId))
+      .filter(alert => alert.location)
+      .filter(alert => !alert.readBy?.includes(userId))
       .filter(alert => !alert.dismissedBy?.includes(userId))
       .filter(alert => {
         const distance = getDistance(lat, lng, alert.location.lat, alert.location.lng);
-        return distance <= alert.radius; // ระยะตาม radius ของ alert
+        // แปลง radius ถ้าเป็นค่าเล็กกว่า 100 สมมติเป็น km
+        const alertRadius = alert.radius < 100 ? alert.radius * 1000 : alert.radius;
+        return distance <= alertRadius;
       });
+
+    // แจ้งเตือนล่าสุด
+    const latestAlert = allDisasterAlerts
+      .filter(alert => alert.location)
+      .filter(alert => !alert.readBy?.includes(userId))
+      .filter(alert => !alert.dismissedBy?.includes(userId))
+      .sort((a, b) => b.createdAt - a.createdAt)[0] || null;
 
     console.log("Nearby Alerts:", nearbyAlerts);
 
     return NextResponse.json({
       nearbyAlerts,       // แจ้งเตือนใกล้เคียง
       latestAlert,        // แจ้งเตือนล่าสุด
-      allDisasterAlerts,  // หน้าประวัติ
+      allDisasterAlerts,  // สำหรับหน้าประวัติ
     });
   } catch (err) {
     console.error('GET /api/alerts error:', err);

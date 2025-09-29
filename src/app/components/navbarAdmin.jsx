@@ -48,8 +48,10 @@ export default function NavbarAdmin({ session }) {
       <div className="container mx-auto flex flex-wrap items-center justify-between p-4">
         {/* Logo */}
         <div className="flex items-center">
+          <a href="/admin/dashboard">
           <img src="/Logo.png" alt="Logo" className="h-18 w-18 mr-2" />
           {session?.user?.name && <span className="ml-2 font-semibold">{session.user.name}</span>}
+          </a>
         </div>
 
         {/* Desktop Icons */}
