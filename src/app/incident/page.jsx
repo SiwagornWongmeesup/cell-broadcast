@@ -13,11 +13,11 @@ export default function IncidentPage() {
 
   const [formData, setFormData] = useState({
     userId: null,
+    name: "",
     title: "",
     details: "",
     date: "",
     time: "",
-    name: "",
     contact: "",
     email: "",
     file: null,
@@ -26,7 +26,11 @@ export default function IncidentPage() {
   // อัปเดต userId เมื่อ session โหลดเสร็จ
   useEffect(() => {
     if (session?.user?.id) {
-      setFormData(prev => ({ ...prev, userId: session.user.id }));
+      setFormData(prev => ({
+         ...prev,
+          userId: session.user.id,
+          name: session.user.name
+        }));
     }
   }, [session]);
 
@@ -78,7 +82,7 @@ export default function IncidentPage() {
       setFormData({
         userId: session?.user?.id || null,
         title: "", details: "", date: "", time: "",
-        name: "", contact: "", email: "", file: null
+        contact: "", email: "", file: null
       });
       setHasFetchedLocation(false);
 
@@ -217,17 +221,6 @@ export default function IncidentPage() {
               <h2 className="text-lg sm:text-xl font-bold text-gray-100 mb-2">ข้อมูลผู้แจ้ง</h2>
   
               <div>
-                <label className="block font-semibold mb-1">ชื่อ</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  className="w-full p-2 border border-gray-600 rounded bg-gray-800 text-gray-100 focus:ring-2 focus:ring-red-400"
-                  onChange={handleChange}
-                />
-              </div>
-  
-              <div>
                 <label className="block font-semibold mb-1">เบอร์ติดต่อ</label>
                 <input
                   type="tel"
@@ -257,7 +250,6 @@ export default function IncidentPage() {
                 type="submit"
                 className="bg-red-600 text-white px-6 py-2 rounded-full hover:bg-red-700 mt-4 w-full disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={
-                  !formData.name ||
                   !formData.contact ||
                   !formData.email ||
                   !location?.lat ||

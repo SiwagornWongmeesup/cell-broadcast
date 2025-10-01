@@ -21,6 +21,7 @@ export default function Sidebar({ session }) {
     {
       name: 'จัดการข้อมูล',
       submenu: [
+        { name: 'รายงานเหตุการณ์', href: '/admin/Report' },
         { name: 'ผู้ใช้งาน', href: '/admin/users' },
         { name: 'คู่มือและข่าวสาร', href: '/admin/content' },
       ],

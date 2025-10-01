@@ -1,63 +1,100 @@
-import React from 'react';
+"use client";
+import { useState } from "react";
 
-function ContactPage() {
+export default function ContactUs() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setSuccess("");
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSuccess("✅ ส่งข้อความเรียบร้อยแล้ว! ทีมงานจะติดต่อกลับเร็ว ๆ นี้");
+        setFormData({ name: "", email: "", message: "" });
+      } else {
+        alert("❌ ส่งข้อความไม่สำเร็จ: " + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ เกิดข้อผิดพลาดในการส่งข้อความ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-white p-4 md:p-8 flex items-center justify-center">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-6 md:p-10 space-y-10">
-        <h1 className="text-3xl md:text-4xl font-bold text-stone-950 text-center tracking-widest">
-          ติดต่อเรา
-        </h1>
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-red-900 text-white p-6 md:p-12 flex justify-center items-start">
+      <div className="w-full max-w-2xl bg-gray-800 bg-opacity-70 rounded-xl shadow-xl p-6 md:p-10">
+        <h2 className="text-3xl font-bold mb-6 text-center">📬 ติดต่อเรา</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-gray-700 tracking-wide">
-
-          {/* ฝั่งข้อมูลติดต่อ - เลื่อนลง */}
-          <div className="flex items-center justify-center md:items-start md:justify-center text-center md:text-left md:translate-y-2 lg:mt-12">
-            <div className="space-y-4 text-base md:text-lg leading-relaxed">
-              <p><strong>ชื่อบริษัท:</strong> บริษัท สมาร์ทโซลูชัน จำกัด</p>
-              <p><strong>ที่อยู่:</strong> 123 ถนนสุขุมวิท เขตวัฒนา กรุงเทพฯ 10110</p>
-              <p><strong>เบอร์โทร:</strong> 02-123-4567</p>
-              <p><strong>มือถือ:</strong> 089-765-4321</p>
-              <p><strong>อีเมล:</strong> info@smartsolution.co.th</p>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-1 font-medium">ชื่อ</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+              required
+            />
           </div>
 
-          {/* แบบฟอร์ม */}
-          <form className="space-y-5 text-base md:text-lg tracking-wide">
-            <div>
-              <label className="block text-gray-600 font-medium mb-1">ชื่อของคุณ</label>
-              <input
-                type="text"
-                className="w-full border rounded-lg p-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="กรอกชื่อของคุณ"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-600 font-medium mb-1">อีเมล</label>
-              <input
-                type="email"
-                className="w-full border rounded-lg p-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="you@example.com"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-600 font-medium mb-1">ข้อความ</label>
-              <textarea
-                rows="3"
-                className="w-full border rounded-lg p-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="พิมพ์ข้อความของคุณที่นี่"
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-stone-950 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg tracking-wider text-base md:text-lg"
-            >
-              ส่งข้อความ
-            </button>
-          </form>
-        </div>
+          <div>
+            <label className="block mb-1 font-medium">อีเมล</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">ข้อความ</label>
+            <textarea
+              name="message"
+              value={formData.message}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-gray-700 text-white h-32 resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+              required
+            ></textarea>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition"
+          >
+            {loading ? "กำลังส่ง..." : "ส่งข้อความ"}
+          </button>
+
+          {success && <p className="mt-3 text-green-400 font-medium">{success}</p>}
+        </form>
       </div>
     </div>
   );
 }
-
-export default ContactPage;

@@ -1,6 +1,7 @@
 'use client';
 
-import { Line, Bar } from 'react-chartjs-2';
+import { useEffect, useState } from 'react';
+import { Bar, Pie } from 'react-chartjs-2';
 import Sidebar from '../../components/Sidebar';
 import {
   Chart as ChartJS,
@@ -8,10 +9,10 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
-  BarElement,
   ArcElement
 } from 'chart.js';
 
@@ -20,115 +21,254 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
-  BarElement,
   ArcElement
 );
 
-// --- ข้อมูล Chart ---
-const lineChartData = {
-  labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.'],
-  datasets: [
-    {
-      label: 'จำนวนการแจ้งเตือน',
-      data: [120, 190, 30, 50, 20, 30, 150],
-      fill: false,
-      borderColor: 'rgb(75, 192, 192)',
-      tension: 0.1,
-    },
-    {
-      label: 'ผู้ใช้งานที่ได้รับแจ้งเตือน',
-      data: [80, 150, 20, 40, 10, 20, 100],
-      fill: false,
-      borderColor: 'rgb(153, 102, 255)',
-      tension: 0.1,
-    },
-  ],
-};
-
-const lineChartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { position: 'top' },
-    title: { display: true, text: 'สถิติการแจ้งเตือนและผู้ใช้งานรายเดือน' },
-  },
-};
-
-const barChartData = {
-  labels: ['ภัยน้ำท่วม', 'แผ่นดินไหว', 'ไฟไหม้', 'อุบัติเหตุ'],
-  datasets: [
-    {
-      label: 'จำนวนการแจ้งเตือน',
-      data: [500, 350, 280, 420],
-      backgroundColor: [
-        'rgba(255, 99, 132, 0.5)',
-        'rgba(54, 162, 235, 0.5)',
-        'rgba(255, 206, 86, 0.5)',
-        'rgba(75, 192, 192, 0.5)',
-      ],
-      borderColor: [
-        'rgba(255, 99, 132, 1)',
-        'rgba(54, 162, 235, 1)',
-        'rgba(255, 206, 86, 1)',
-        'rgba(75, 192, 192, 1)',
-      ],
-      borderWidth: 1,
-    },
-  ],
-};
-
-const barChartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { position: 'top' },
-    title: { display: true, text: 'เหตุการณ์ที่แจ้งเตือนบ่อยที่สุด' },
-  },
-  scales: { y: { beginAtZero: true } },
-};
-
-// --- Card Metrics ---
-const metrics = [
-  { title: 'จำนวนการแจ้งเตือนทั้งหมด', value: '1200', icon: '🚨' },
-  { title: 'การแจ้งเตือนสำเร็จ', value: '1150', icon: '✅' },
-  { title: 'ความล้มเหลวในการส่ง', value: '50', icon: '❌' },
-  { title: 'ผู้ใช้งานที่ได้รับแจ้งเตือน', value: '1,000,000+', icon: '👥' },
-];
-
 export default function DashboardPage() {
+  const [metrics, setMetrics] = useState([]);
+  const [lineChartData, setLineChartData] = useState(null);
+  const [pieAdminData, setPieAdminData] = useState(null);
+  const [pieUserData, setPieUserData] = useState(null);
+  const [pieAreaData, setPieAreaData] = useState(null);
+  const [instagramList, setInstagramList] = useState([]);
+  const [topUsers, setTopUsers] = useState([]);
+  const [topAreas, setTopAreas] = useState([]);
+  const [filters, setFilters] = useState({ month: '', type: '' });
+
+  const handleFilterChange = (e) => {
+    setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch(`/api/admin/dashboard?month=${filters.month}&type=${filters.type}`);
+        const data = await res.json();
+
+        // Metrics
+        setMetrics([
+          { title: 'จำนวนแจ้งเตือนทั้งหมด', value: data.totalAlerts, icon: '🚨' },
+          { title: 'ผู้ใช้งานทั้งหมด', value: data.totalUsers, icon: '👤' },
+          { title: 'รายงานจากผู้ใช้ทั้งหมด', value: data.totalUserreports, icon: '📝' },
+          { title: 'ผู้ใช้ที่มี IG', value: data.totalUserprofiles, icon: '📸' },
+        ]);
+
+        // Line Chart: แจ้งเตือนรายเดือน
+        setLineChartData({
+          labels: data.labels || [], 
+          datasets: [{
+            label: 'จำนวนแจ้งเตือนต่อเดือน',
+            data: Object.values(data.countsByMonth || {}),
+            borderColor: 'rgb(75, 192, 192)',
+            fill: false,
+            tension: 0.1,
+          }]
+        });
+        // Pie Charts
+        setPieAdminData({
+          labels: Object.keys(data.typeStats || {}),
+          datasets: [{
+            label: 'จำนวนรายงานเหตุการณ์จากแอดมิน',
+            data: Object.values(data.typeStats || {}),
+            backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF'],
+          }]
+        });
+        
+        setPieUserData({
+          labels: Object.keys(data.statsReports || {}),
+          datasets: [{
+            label: 'จำนวนรายงานเหตุการณ์จากผู้ใช้',
+            data: Object.values(data.statsReports || {}),
+            backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF'],
+          }]
+        });
+
+        setPieAreaData({
+          labels: Object.keys(data.allStats || {}),
+          datasets: [{
+            label: 'รวมจำนวนเหตุการณ์ที่ถูกส่งมากที่สุด',
+            data: Object.values(data.allStats || {}),
+            backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF'],
+          }]
+        });
+
+        setInstagramList(data.instagramList || []);
+        setTopUsers(data.topUsers || []);
+        setTopAreas(data.topAreas || []);
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+      }
+    };
+
+    fetchDashboard();
+  }, [filters]);
+
+  if (!lineChartData || !pieAdminData || !pieUserData || !pieAreaData) {
+    return <div className="flex justify-center items-center min-h-screen text-gray-800">กำลังโหลด Dashboard...</div>;
+  }
+
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <div className="hidden md:flex">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className="w-full md:w-64 bg-gray-900 border-r border-gray-700">
         <Sidebar />
       </div>
-      {/* Main Content */}
-      <main className="flex-1 p-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">ภาพรวม Dashboard</h1>
+
+      {/* Main content */}
+      <main className="flex-1 p-4 md:p-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-6">ภาพรวม Dashboard</h1>
 
         {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {metrics.map((metric, index) => (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-lg shadow-md flex items-center justify-between"
-            >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {metrics.map((metric, i) => (
+            <div key={i} className="bg-white p-4 md:p-6 rounded-lg shadow-md flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">{metric.title}</p>
-                <h2 className="text-2xl font-semibold text-gray-900">{metric.value}</h2>
+                <p className="text-sm md:text-base text-gray-500">{metric.title}</p>
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-900">{metric.value}</h2>
               </div>
-              <div className="text-4xl text-blue-500">{metric.icon}</div>
+              <div className="text-3xl md:text-4xl">{metric.icon}</div>
             </div>
           ))}
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <Line data={lineChartData} options={lineChartOptions} />
+        {/* Line Chart */}
+        <div className="bg-white p-4 md:p-6 rounded-lg shadow-md mb-6">
+          <Bar data={lineChartData} 
+          options={{
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1, // หรือ 5 ถ้า max เยอะ
+                  precision: 0 // ให้เป็นจำนวนเต็ม
+                }
+              }
+            }
+          }} 
+          />
+        </div>
+
+        {/* Pie Charts */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white p-4 md:p-6 rounded-lg shadow-md">
+            <Pie 
+              data={pieAdminData} 
+              options={{
+                plugins: {
+                  title: {
+                    display: true,
+                    text: 'จำนวนรายงานเหตุการณ์จากแอดมิน',
+                    font: {
+                      size: 18,
+                    }
+                  },
+                  legend: {
+                    position: 'bottom'
+                  }
+                }
+              }} 
+            />
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <Bar data={barChartData} options={barChartOptions} />
+
+          <div className="bg-white p-4 md:p-6 rounded-lg shadow-md">
+            <Pie 
+              data={pieUserData} 
+              options={{
+                plugins: {
+                  title: {
+                    display: true,
+                    text: 'จำนวนรายงานเหตุการณ์จากผู้ใช้',
+                    font: {
+                      size: 18,
+                    }
+                  },
+                  legend: {
+                    position: 'bottom'
+                  }
+                }
+              }} 
+            />
+          </div>
+
+          <div className="bg-white p-4 md:p-6 rounded-lg shadow-md">
+            <Pie 
+              data={pieAreaData} 
+              options={{
+                plugins: {
+                  title: {
+                    display: true,
+                    text: 'รวมจำนวนเหตุการณ์ที่ถูกส่งมากที่สุด',
+                    font: {
+                      size: 18,
+                    }
+                  },
+                  legend: {
+                    position: 'bottom'
+                  }
+                }
+              }} 
+            />
+          </div>
+        </div>
+
+        {/* Instagram List */}
+        <div className="bg-white p-4 md:p-6 rounded-lg shadow-md mb-6">
+          <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-4">Instagram ของผู้ใช้งาน</h2>
+          {instagramList.length === 0 ? (
+            <p className="text-gray-500">ยังไม่มี IG</p>
+          ) : (
+            <ul className="list-disc list-inside max-h-52 overflow-y-auto">
+              {instagramList.map((ig, i) => (
+                <li key={i} className="text-gray-800 hover:text-blue-500 cursor-pointer">@{ig}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Top 5 Tables */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-white p-4 md:p-6 rounded-lg shadow-md overflow-x-auto">
+            <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-4">Top 5 Users ส่งแจ้งเตือน</h2>
+            <table className="w-full text-left">
+              <thead>
+                <tr>
+                  <th className="border px-2 py-1">User</th>
+                  <th className="border px-2 py-1">จำนวนแจ้งเตือน</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topUsers.map((u, i) => (
+                  <tr key={u._id || i}>
+                    <td className="border px-2 py-1">{u.name}</td>
+                    <td className="border px-2 py-1">{u.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bg-white p-4 md:p-6 rounded-lg shadow-md overflow-x-auto">
+            <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-4">Top 5 เขตเสี่ยง</h2>
+            <table className="w-full text-left">
+              <thead>
+                <tr>
+                  <th className="border px-2 py-1">เขต</th>
+                  <th className="border px-2 py-1">จำนวนเหตุการณ์</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topAreas.map((a, i) => (
+                  <tr key={i}>
+                    <td className="border px-2 py-1">{a.area}</td>
+                    <td className="border px-2 py-1">{a.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </main>

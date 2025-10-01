@@ -175,7 +175,7 @@ const handleCloseHandbook = () => {
         {/* Map */}
         <div className="w-full md:w-1/2 p-2 sm:p-4 md:p-6 border-b md:border-b-0 md:border-r border-red-700 flex-shrink-0">
           <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">
-            แผนที่แจ้งเตือนสำหรับคุณ {session?.user.name};
+            แผนที่แจ้งเตือนสำหรับคุณ {session?.user.name}
           </h2>
           <div className="w-full h-64 sm:h-80 md:h-[500px] bg-gray-800 rounded-lg relative overflow-hidden z-0">
             {hasFetchedLocation && (

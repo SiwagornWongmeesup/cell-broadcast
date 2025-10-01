@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { connectMongoDB } from '../../../../lib/mongodb';
 import Report from '../../../../Models/Report';
-import User from '../../../../Models/user';
+import { authOptions } from '../../api/auth/[...nextauth]/route'
+import { getServerSession } from "next-auth/next";
 import cloudinary from '../../../../lib/cloudinary';
 
 export async function GET() {
@@ -17,12 +18,12 @@ export async function GET() {
 export async function POST(req) {
   try {
     await connectMongoDB();
+    const session = await getServerSession(authOptions);
 
     const formData = await req.formData();
     const title = formData.get('title');
     const details = formData.get('details');
     const locationRaw = formData.get('location');
-    const name = formData.get('name');
     const contact = formData.get('contact');
     const email = formData.get('email');
     const date = formData.get('date');
@@ -38,6 +39,14 @@ export async function POST(req) {
         console.error("Error parsing location:", err);
       }
     }
+
+  let userName = "Guest"; // default
+  let internalUserId = null;
+
+  if (session?.user) {
+    userName = session.user.name; // เอาชื่อจาก session
+    internalUserId = session.user.id; // internal userId
+}
 
     let fileUrl = null;
 
@@ -57,8 +66,8 @@ export async function POST(req) {
       title,
       details,
       location: location || { lat: null, lng: null },
-      userId: userId || null,
-      name: name || null,
+      userId: internalUserId,
+      name: userName,
       contact: contact || null,
       email: email || null,
       date: date || null,

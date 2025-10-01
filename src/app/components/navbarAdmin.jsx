@@ -57,12 +57,12 @@ export default function NavbarAdmin({ session }) {
         {/* Desktop Icons */}
         <div className="hidden md:flex items-center space-x-4">
           <Link
-            href="/admin/Report"
+            href="/admin/contact"
             className={`px-3 py-2 rounded-md transition-colors ${
-              isActive('/admin/report') ? 'bg-blue-600 text-white' : 'hover:text-gray-300'
+              isActive('/admin/contact') ? 'bg-blue-600 text-white' : 'hover:text-gray-300'
             }`}
           >
-            📊
+            📩
           </Link>
           <Link
             href="/admin/profile"
