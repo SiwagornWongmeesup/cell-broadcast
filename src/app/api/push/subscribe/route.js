@@ -8,23 +8,21 @@ webpush.setVapidDetails(
   VAPID_PRIVATE_KEY
 );
 
-export default async function handler(req, res) {
+export async function POST(req) {
   const { db } = await connectMongoDB();
+  const subscription = await req.json();
 
-  if (req.method === 'POST') {
-    const subscription = req.body;
+  // เก็บ subscription ลง MongoDB
+  await db.collection('subscriptions').updateOne(
+    { endpoint: subscription.endpoint },
+    { $set: subscription },
+    { upsert: true }
+  );
 
-    // เก็บ subscription ลง MongoDB
-    await db.collection('subscriptions').updateOne(
-      { endpoint: subscription.endpoint },
-      { $set: subscription },
-      { upsert: true }
-    );
-
-    return res.status(201).json({ message: 'Subscribed!' });
-  }
-
-  res.status(405).end();
+  return new Response(JSON.stringify({ message: 'Subscribed!' }), {
+    status: 201,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 
 // ฟังก์ชันส่ง push notification

@@ -65,6 +65,12 @@ export default function HomePage() {
 
   // useEffect สำหรับขอ permission push notification
   useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('SW registered for push', reg))
+        .catch(err => console.error('SW registration failed', err));
+    }
+  
     if ('Notification' in window) {
       Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
