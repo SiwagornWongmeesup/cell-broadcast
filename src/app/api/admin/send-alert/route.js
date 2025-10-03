@@ -6,6 +6,7 @@ import Alert from '../../../../../Models/Alerts';
 import User from '../../../../../Models/user'; 
 import Nodemailer from 'nodemailer';
 import { disasterRecommendations } from '../../../components/Data/disasterData';
+import { sendPush } from '../../push/subscribe/route';
 
 const MONGODB_URL = process.env.MONGODB_URL;
 
@@ -90,6 +91,8 @@ export async function POST(req) {
       readBy: [],
       dismissedBy: [],
     });
+
+    await sendPush(`[${type}] แจ้งเตือนใหม่`, message);
 
     // ถ้าเลือกส่งอีเมล
     if (sendEmail) {
