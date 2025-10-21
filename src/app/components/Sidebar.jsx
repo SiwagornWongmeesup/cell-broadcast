@@ -33,12 +33,6 @@ export default function Sidebar({ session }) {
         { name: 'ประวัติการแจ้งเตือน', href: '/admin/Notificationhistory' },
       ],
     },
-    {
-      name: 'ตั้งค่า',
-      submenu: [
-        { name: 'ตั้งค่าระบบ', href: '/admin/settings' },
-      ],
-    },
   ];
 
   const isActive = (href) => href && pathname.startsWith(href);

@@ -34,10 +34,6 @@ export default function NavbarAdmin({ session }) {
         { name: 'ประวัติการแจ้งเตือน', href: '/admin/Notificationhistory' },
       ],
     },
-    {
-      name: 'ตั้งค่า',
-      submenu: [{ name: 'ตั้งค่าระบบ', href: '/admin/settings' }],
-    },
     { name: 'ออกจากระบบ', action: () => signOut({ callbackUrl: '/' }) },
   ];
 
