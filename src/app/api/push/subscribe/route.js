@@ -1,11 +1,10 @@
 import webpush from 'web-push';
-import { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY } from '../../../../../lib/push-keys';
 import { connectMongoDB } from '../../../../../lib/mongodb';
 
 webpush.setVapidDetails(
   'mailto:s66122202053@ssru.ac.th',
-  VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
 );
 
 export async function POST(req) {

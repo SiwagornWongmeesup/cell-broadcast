@@ -111,7 +111,8 @@ export default function Dashboard() {
           >
             <option value="">เลือกประเภทภัยพิบัติ</option>
             <option value="แผ่นดินไหว">แผ่นดินไหว</option>
-            <option value="ภูเขาไฟระเบิด">ภูเขาไฟระเบิด</option>
+            <option value="ดินถล่ม">ดินถล่ม</option>
+            <option value="คลื่นสึนามิ">คลื่นสึนามิ</option>
             <option value="น้ำท่วม">น้ำท่วม</option>
             <option value="พายุ">พายุ</option>
             <option value="ไฟป่า">ไฟป่า</option>

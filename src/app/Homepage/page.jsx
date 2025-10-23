@@ -27,6 +27,7 @@ export default function HomePage() {
 
   const [handbookQueue, setHandbookQueue] = useState([]);
   const [currentHandbook, setCurrentHandbook] = useState(null);
+  const [handbookDismissed, setHandbookDismissed] = useState(false); // track if user closed handbook
 
   // -------------------------
   // ฟังก์ชัน subscribe push notification
@@ -34,7 +35,12 @@ export default function HomePage() {
     if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.ready;
 
-      // ดึง public key จาก backend
+      const existingSubscription = await registration.pushManager.getSubscription();
+      if (existingSubscription) {
+        await existingSubscription.unsubscribe();
+        console.log('Old subscription removed');
+      }
+
       const publicKeyRes = await fetch('/api/push/public-key');
       const { publicKey } = await publicKeyRes.json();
 
@@ -43,7 +49,6 @@ export default function HomePage() {
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
 
-      // ส่ง subscription ไป backend
       await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,7 +59,6 @@ export default function HomePage() {
     }
   };
 
-  // helper แปลง VAPID key
   const urlBase64ToUint8Array = (base64String) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -63,7 +67,6 @@ export default function HomePage() {
   };
   // -------------------------
 
-  // useEffect สำหรับขอ permission push notification
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js')
@@ -89,16 +92,45 @@ export default function HomePage() {
       const nextQueue = alertQueue.filter(a => a._id !== currentAlert._id);
       const dismissedAlert = currentAlert;
 
+      const nextAlert = nextQueue[0] || null;
+
       setCurrentAlert(nextQueue[0] || null);
       setAlertQueue(nextQueue.slice(1));
       setDismissed(false);
+
+      if (handbookDismissed && nextAlert && ["น้ำท่วม","แผ่นดินไหว","ไฟป่า","พายุ","ดินถล่ม","คลื่นสึนามิ","อื่นๆ"].includes(nextAlert.type)) {
+        setCurrentHandbook({
+          type: nextAlert.type
+        });
+        setHandbookDismissed(false); // รีเซ็ตให้โชว์คู่มือใหม่
+      }
 
       fetch(`/api/alerts/dismiss`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ alertId: dismissedAlert._id, userId: session.user.id })
       }).catch(err => console.error("Dismiss alert error:", err));
-    }, 300); 
+    }, 200); 
+  };
+
+  // ปิด handbook
+  const handleCloseHandbook = () => {
+    setHandbookDismissed(true); // user กดปิด
+
+    if (currentAlert && ["แผ่นดินไหว","คลื่นสึนามิ","น้ำท่วม","ไฟป่า","ดินถล่ม","พายุ","อื่นๆ"].includes(currentAlert.type)) {
+      setCurrentHandbook(currentAlert); // โชว์คู่มือของ alert ปัจจุบัน
+      setHandbookDismissed(false); // รีเซ็ต flag เพื่อให้โชว์คู่มือใหม่
+    } else if (alertQueue.length > 0) {
+      const nextAlert = alertQueue[0];
+      if (["แผ่นดินไหว","คลื่นสึนามิ","น้ำท่วม","ไฟป่า","ดินถล่ม","พายุ","อื่นๆ"].includes(nextAlert.type)) {
+        setCurrentHandbook(nextAlert);
+        setHandbookDismissed(false);
+      } else {
+        setCurrentHandbook(null);
+      }
+    } else {
+      setCurrentHandbook(null);
+    }
   };
 
   // ฟังก์ชัน fetch alerts
@@ -130,23 +162,22 @@ export default function HomePage() {
         }));
       setMarkers(activeMarkers);
 
-      const disasterAlerts = nearby.filter(a => ["น้ำท่วม", "แผ่นดินไหว", "ไฟป่า", "พายุ", "ภูเขาไฟระเบิด", "อื่นๆ"].includes(a.type));
+      // ตั้งคู่มือ
+      const disasterAlerts = validAlerts.filter(a => ["แผ่นดินไหว", "คลื่นสึนามิ", "น้ำท่วม",  "ไฟป่า",  "ดินถล่ม","พายุ", "อื่นๆ"].includes(a.type));
       setHandbookQueue(disasterAlerts);
-      setCurrentHandbook(disasterAlerts[0] || null);
+      
+      setCurrentHandbook(prev => {
+        if (handbookDismissed) return prev;      // user ปิดแล้ว
+        if (prev) return prev;                    // มีอยู่แล้ว ไม่แก้
+        return disasterAlerts[0] || null;
+      });   
+
     } catch (error) {
       console.error("Fetch alerts error:", error);
       setAlerts([]); setCurrentAlert(null); setAlertQueue([]);
-      setMarkers([]); setHandbookQueue([]); setCurrentHandbook(null);
+      setMarkers([]); setHandbookQueue([]); 
+      // if (!handbookDismissed) setCurrentHandbook(null);
     }
-  };
-
-  // ปิด handbook
-  const handleCloseHandbook = () => {
-    if (!currentHandbook) return;
-
-    setMarkers(prev => prev.filter(m => m.id !== currentHandbook._id));
-    const currentIndex = handbookQueue.findIndex(h => h._id === currentHandbook._id);
-    setCurrentHandbook(handbookQueue[currentIndex + 1] || null);
   };
 
   // Geolocation
@@ -179,10 +210,10 @@ export default function HomePage() {
     return () => { clearTimeout(debounceTimeout); navigator.geolocation.clearWatch(watchId); };
   }, [status, session]);
 
-  // refresh alerts ทุก 30 วินาที
+  // refresh alerts ทุก 1 วินาที
   useEffect(() => {
     if (!userLocation || !session?.user?.id) return;
-    const interval = setInterval(() => { fetchAlerts(userLocation.lat, userLocation.lng); }, 30000);
+    const interval = setInterval(() => { fetchAlerts(userLocation.lat, userLocation.lng); }, 1000);
     return () => clearInterval(interval);
   }, [userLocation, session]);
 
@@ -217,11 +248,11 @@ export default function HomePage() {
           <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">
             คู่มือการรับมือสถานการณ์
           </h2>
-          {currentHandbook ? (
+          {!handbookDismissed && currentHandbook ? (
             <DisasterInfo
               title={disasterRecommendations[currentHandbook.type]?.title}
               steps={disasterRecommendations[currentHandbook.type]?.steps}
-              onclose={handleCloseHandbook}
+              onclose={handleCloseHandbook} // กดปิดครั้งเดียว
             />
           ) : (
             <p className="text-sm sm:text-base md:text-lg text-gray-100">
