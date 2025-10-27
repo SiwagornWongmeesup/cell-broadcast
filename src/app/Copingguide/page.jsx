@@ -173,13 +173,29 @@ export default function DisasterGuide() {
 
       {/* เนื้อหาคู่มือ */}
       <div className="bg-gray-800 bg-opacity-70 shadow-xl p-6 rounded-xl max-w-3xl mx-auto">
-        <h3 className="text-2xl font-semibold mb-4">📝 วิธีรับมือ: {selected}</h3>
-        <ul className="list-disc pl-6 space-y-3 text-lg">
-          {guides[selected].map((step, i) => (
+  <h3 className="text-2xl font-semibold mb-4">📝 วิธีรับมือ: {selected}</h3>
+  
+  {Array.isArray(guides[selected]) ? (
+    // กรณีเป็น array (เช่น "อื่นๆ")
+    <ul className="list-disc pl-6 space-y-3 text-lg">
+      {guides[selected].map((step, i) => (
+        <li key={i}>{step}</li>
+      ))}
+    </ul>
+  ) : (
+    // กรณีเป็น object (เช่น แผ่นดินไหว, น้ำท่วม)
+    Object.entries(guides[selected]).map(([phase, steps]) => (
+      <div key={phase} className="mb-4">
+        <h4 className="text-xl font-semibold mb-2">{phase}</h4>
+        <ul className="list-disc pl-6 space-y-1 text-lg">
+          {steps.map((step, i) => (
             <li key={i}>{step}</li>
           ))}
         </ul>
       </div>
-    </div>
+    ))
+  )}
+</div>
+</div>
   );
 }
