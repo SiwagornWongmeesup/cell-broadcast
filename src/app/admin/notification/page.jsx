@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sendEmail, setSendEmail] = useState(false);
+  const [address, setAddress] = useState({ province: '', district: ''})
 
   const defaultRadius = {
     earthquake: 3000,
@@ -30,6 +31,31 @@ export default function Dashboard() {
   const metersToKm = (meters) => (meters / 1000).toFixed(1);
   const kmToMeters = (km) => Math.round(km * 1000);
 
+  useEffect(() => {
+    if (location?.lat != null && location?.lng != null) {
+      const fetchAddress = async () => {
+        try {
+          const res = await fetch('/api/reverse-geocode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lat: location.lat, lng: location.lng }),
+          });
+          const data = await res.json();
+          setAddress({
+            province: data.province || '',
+            district: data.district || '',
+          });
+        } catch (err) {
+          console.error('Error fetching address:', err);
+          setAddress({ province: '', district: '' }); // ป้องกันค้าง
+        }
+      };
+      fetchAddress();
+    }
+  }, [location]);
+  
+  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!message || !location) {
@@ -42,7 +68,7 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ message, type, radius, location, sendEmail }),  
+        body: JSON.stringify({ message, type, radius, location, sendEmail, address }),  
       });
       if (res.ok) {
         alert('ส่งแจ้งเตือนสำเร็จ');
@@ -51,6 +77,7 @@ export default function Dashboard() {
         setRadius(500);
         setLocation(null);
         setSendEmail(false);
+        setAddress({ province: '', district: ''});
       } else {
         const data = await res.json();
         const errorMessage = data?.error || 'ไม่ทราบสาเหตุ';
@@ -70,6 +97,7 @@ export default function Dashboard() {
     else if (session.user.role !== 'admin') router.replace('/Homepage');
   }, [session, status, router]);
 
+
   if (status === 'loading') return <div>Loading...</div>;
   if (!session || session.user.role !== 'admin') return null;
 
@@ -84,6 +112,11 @@ export default function Dashboard() {
         <div className="md:w-2/3 w-full h-96 md:h-[600px] bg-gray-200 rounded overflow-hidden">
           <MapClient location={location} setLocation={setLocation} radius={radius} />
         </div>
+        <div className="mb-2 flex flex-col sm:flex-row gap-2">
+          <p className="font-semibold">จังหวัด: <span className="font-normal">{address.province || '-'}</span></p>
+          <p className="font-semibold">เขต: <span className="font-normal">{address.district || '-'}</span></p>
+        </div>
+
 
         {/* Form ทางขวา */}
         <form

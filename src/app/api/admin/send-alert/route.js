@@ -19,7 +19,7 @@ async function connectDB() {
 
 
 // ฟังก์ชันส่งอีเมลแจ้งเตือน พร้อมคู่มือและวันที่
-async function SendAlertEmail(message, type, location, createdAt) {
+async function SendAlertEmail(message, type, location, createdAt, address) {
   const users = await User.find({});
   const recipients = users.map(u => u.email).filter(Boolean);
   if (!recipients.length) return;
@@ -57,6 +57,7 @@ async function SendAlertEmail(message, type, location, createdAt) {
     subject: `[Alert] ${type}`,
     text: `${message}
 Location: ${location.lat}, ${location.lng}
+Province: ${address.province}, District: ${address.district}
 เวลาแจ้งเตือน: ${alertTime}
 คู่มือการรับมือ:
 ${stepsText}`,
@@ -74,11 +75,20 @@ export async function POST(req) {
     await connectDB();
 
     const body = await req.json();
-    const { message, type, radius, location, fileUrl, sendEmail } = body;
+    const { message, type, radius, location, fileUrl, sendEmail, address:addrFromClient } = body;
+    
 
     if (!message || !location) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
+    const province = addrFromClient?.province || '';
+    const district =
+      addrFromClient?.district ||
+      addrFromClient?.city_district ||
+      addrFromClient?.suburb ||
+      addrFromClient?.county ||
+      addrFromClient?.town ||
+      '';
 
     // สร้าง alert ใน MongoDB
     const alert = await Alert.create({
@@ -86,6 +96,7 @@ export async function POST(req) {
       type,
       radius,
       location : { lat: location.lat, lng: location.lng },  
+      address: { province, district },
       fileUrl: fileUrl || null, 
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       readBy: [],
@@ -97,7 +108,7 @@ export async function POST(req) {
     // ถ้าเลือกส่งอีเมล
     if (sendEmail) {
       try {
-        await SendAlertEmail(message, type, location, alert.createdAt);
+        await SendAlertEmail(message, type, location, alert.createdAt, { province, district });
       } catch (emailErr) {
         console.error('Error sending alert email:', emailErr);
       }

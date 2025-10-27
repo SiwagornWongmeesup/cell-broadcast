@@ -61,11 +61,28 @@ export async function POST(req) {
       fileUrl = result.secure_url;
     }
 
+    let address = { province: null, district: null };
+    if (location?.lat && location?.lng) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${location.lat}&lon=${location.lng}&format=json&accept-language=th`
+        );
+        const data = await res.json();
+        address = {
+          province: data.address?.state || data.address?.province || null,
+          district: data.address?.suburb || data.address?.county || data.address?.town || null,
+        };
+      } catch (error) {
+        console.error("Reverse geocoding error:", error);
+      }
+    }
+
 
     const report = new Report({
       title,
       details,
       location: location || { lat: null, lng: null },
+      address,
       userId: internalUserId,
       name: userName,
       contact: contact || null,

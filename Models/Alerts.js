@@ -4,6 +4,10 @@ const alertSchema = new mongoose.Schema({
   message: { type: String, required: true },
   type: { type: String },
   radius: { type: Number },
+  address: {
+  province: { type: String, default: null },
+  district: { type: String, default: null },
+  },
   location: {
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },

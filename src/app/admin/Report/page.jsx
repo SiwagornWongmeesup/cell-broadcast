@@ -8,12 +8,12 @@ const MapAdmin = dynamic(() => import("../../components/MapAdmin"), { ssr: false
 export default function AdminDashboard() {
   const [alerts, setAlerts] = useState([]);
   const [sendEmailMap, setSendEmailMap] = useState({});
+  const [radiusMap, setRadiusMap] = useState({}); // ✅ เก็บค่ารัศมีของแต่ละ alert
 
   const fetchAlerts = async () => {
     try {
       const res = await fetch("/api/user-alerts");
       const data = await res.json();
-      console.log("Response text:", data);
       setAlerts(data);
     } catch (err) {
       console.error("Error fetching alerts:", err);
@@ -28,22 +28,23 @@ export default function AdminDashboard() {
 
   async function forwardToUsers(report) {
     try {
+      const radius = radiusMap[report._id] || 3000; // ✅ ใช้รัศมีที่กรอก หรือค่า default = 3000
       const res = await fetch("/api/admin/send-alert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: report.details,
           type: report.title,
-          radius: 3000,
+          radius,
           location: report.location,
           fileUrl: report.file || null,
           sendEmail: sendEmailMap[report._id] || false,
         }),
       });
-     
+
       const data = await res.json();
       if (res.ok) {
-        alert("✅ ส่งต่อไปยังผู้ใช้แล้ว");
+        alert(`✅ ส่งต่อแจ้งเตือน (รัศมี ${radius} เมตร) แล้ว`);
         setSendEmailMap(prev => ({ ...prev, [report._id]: false }));
       } else {
         alert("❌ ส่งต่อไม่สำเร็จ: " + data.error);
@@ -58,7 +59,6 @@ export default function AdminDashboard() {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar className="w-64 h-screen" />
 
-      {/* Main content */}
       <div className="flex-1 p-6 space-y-6 overflow-auto">
         <h1 className="text-2xl font-bold">📢 แจ้งเหตุจากผู้ใช้</h1>
 
@@ -66,7 +66,6 @@ export default function AdminDashboard() {
           <p className="text-gray-500">ยังไม่มีการแจ้งเหตุ</p>
         ) : (
           <>
-            {/* List alerts */}
             <div className="overflow-y-auto max-h-[300px] md:max-h-[400px] border rounded-lg p-3 bg-white shadow">
               <ul className="divide-y">
                 {alerts.map((a) => (
@@ -82,6 +81,12 @@ export default function AdminDashboard() {
                         <p className="text-sm">
                           <b>Location:</b>{" "}
                           {a.location ? `${a.location.lat}, ${a.location.lng}` : "ไม่มี"}
+                        </p>
+                        <p className="text-sm">
+                          <b>Province:</b> {a.address?.province || "-"}
+                        </p>
+                        <p className="text-sm">
+                          <b>District:</b> {a.address?.district || "-"}
                         </p>
                         <p className="text-sm">
                           <b>File:</b>{" "}
@@ -104,7 +109,7 @@ export default function AdminDashboard() {
                         </p>
                       </div>
 
-                      {/* Status และปุ่มส่งต่อ */}
+                      {/* Status, Radius, ส่งอีเมล, ปุ่มส่งต่อ */}
                       <div className="flex flex-col md:items-end gap-2 mt-2 md:mt-0">
                         <span
                           className={`px-2 py-1 rounded text-white text-sm ${
@@ -118,11 +123,33 @@ export default function AdminDashboard() {
                           {a.status}
                         </span>
 
+                        {/* ✅ Input รัศมี */}
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm">รัศมี (เมตร):</label>
+                          <input
+                            type="number"
+                            value={radiusMap[a._id] || ""}
+                            onChange={(e) =>
+                              setRadiusMap((prev) => ({
+                                ...prev,
+                                [a._id]: e.target.value,
+                              }))
+                            }
+                            placeholder="3000"
+                            className="border rounded px-2 py-1 w-24"
+                          />
+                        </div>
+
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
                             checked={sendEmailMap[a._id] || false}
-                            onChange={e =>  setSendEmailMap(prev => ({ ...prev, [a._id]: e.target.checked }))}
+                            onChange={(e) =>
+                              setSendEmailMap((prev) => ({
+                                ...prev,
+                                [a._id]: e.target.checked,
+                              }))
+                            }
                           />
                           ส่งทางอีเมล
                         </label>
@@ -140,7 +167,6 @@ export default function AdminDashboard() {
               </ul>
             </div>
 
-            {/* แผนที่ */}
             <div>
               <h2 className="text-lg font-bold mb-2">แผนที่แจ้งเหตุ</h2>
               <MapAdmin alerts={alerts} />

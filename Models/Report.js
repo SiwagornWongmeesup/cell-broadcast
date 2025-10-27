@@ -4,6 +4,10 @@ const UserReportSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   title: { type: String, required: true },
   details: { type: String, required: true },
+  address: {
+    province: { type: String, default: null },
+    district: { type: String, default: null },
+  },
   location: {
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
