@@ -10,7 +10,15 @@ export async function POST(request) {
     }
 
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+      {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'cell-broadcast-app/1.0 (s66122202053@ssru.ac.th)', 
+          'Accept-Language': 'th',
+          'Cache-Control': 'no-cache',
+        },
+      }
     );
     const data = await response.json();
 
