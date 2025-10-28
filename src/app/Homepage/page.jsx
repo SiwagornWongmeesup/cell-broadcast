@@ -11,7 +11,7 @@ import { disasterRecommendations } from '../components/Data/disasterData';
 const UserMapComponent = dynamic(() => import('../components/mapuser'), {
   ssr: false,
   loading: () => <p>Loading map...</p>,
-});
+}); 
 
 export default function HomePage() {
   const router = useRouter();
