@@ -15,10 +15,54 @@ export default function AdminDashboard() {
       const res = await fetch("/api/user-alerts");
       const data = await res.json();
       setAlerts(data);
+      fetchAddressForAlerts(data);
     } catch (err) {
       console.error("Error fetching alerts:", err);
     }
   };
+
+  // ✅ ฟังก์ชันแปลงตำแหน่ง lat/lng เป็นชื่อจังหวัดและเขต
+const fetchAddressForAlerts = async (alertsData) => {
+  const updated = await Promise.all(
+    alertsData.map(async (a) => {
+      if (!a.location?.lat || !a.location?.lng) return a; // ถ้าไม่มีพิกัดข้ามไปเลย
+
+      try {
+        const res = await fetch("/api/reverse-geocode", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "cell-broadcast-admin/1.0 (grant@ssru.ac.th)",
+            "Accept-Language": "th",
+          },
+          body: JSON.stringify({
+            lat: a.location.lat,
+            lng: a.location.lng,
+          }),
+        });
+
+        if (!res.ok) throw new Error("Reverse geocode failed");
+        const data = await res.json();
+
+        return {
+          ...a,
+          address: {
+            province: data.province || "-",
+            district: data.district || "-",
+          },
+        };
+      } catch (err) {
+        console.error("❌ Error reverse geocode:", err);
+        return a;
+      }
+    })
+  );
+
+  setAlerts(updated);
+};
+
+
+  
 
   useEffect(() => {
     fetchAlerts();
