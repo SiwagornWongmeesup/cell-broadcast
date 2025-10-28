@@ -37,8 +37,8 @@ export async function sendPush(alert,address) {
         JSON.stringify({
           title: alert.title,
           body: alert.body,
-          province: address?.province || alert.province,
-          district: address?.district || alert.district,
+          province: (address && address.province) || alert.province || '',
+          district: (address && address.district) || alert.district || '',
         })
       );
     } catch (err) {

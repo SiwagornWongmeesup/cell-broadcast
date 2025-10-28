@@ -107,6 +107,7 @@ export default function MapClient({ location, setLocation, showInputs = true }) 
         center={location ? [location.lat, location.lng] : [13.736717, 100.523186]}
         zoom={13}
         className="w-full h-[300px] md:h-[400px] lg:h-[500px]"
+        tap={true}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <SearchBox />
