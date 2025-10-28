@@ -25,15 +25,25 @@ export async function POST(req) {
 }
 
 // ฟังก์ชันส่ง push notification
-export async function sendPush(title, body) {
+export async function sendPush(alert,address) {
+  // alert = { title, body, province, district }
   const { db } = await connectMongoDB();
   const subscriptions = await db.collection('subscriptions').find({}).toArray();
 
   for (const sub of subscriptions) {
     try {
-      await webpush.sendNotification(sub, JSON.stringify({ title, body }));
+      await webpush.sendNotification(
+        sub,
+        JSON.stringify({
+          title: alert.title,
+          body: alert.body,
+          province: address?.province || alert.province,
+          district: address?.district || alert.district,
+        })
+      );
     } catch (err) {
       console.error('Push error', err);
     }
   }
 }
+

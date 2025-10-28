@@ -67,17 +67,17 @@ export default function AlertBox({ alert, onDismiss }) {
 
         <div>
           <label className="font-medium">ข้อความแจ้งเตือน:</label>
-          <p className="text-red-700 font-bold">{alert.address?.province || '-'}</p>
+          <p className="text-red-700 font-bold">{alert.message}</p>
         </div>
 
         <div>
           <label className="font-medium">จังหวัด:</label>
-          <p className="text-red-700 font-bold">{alert.address?.district || '-'}</p>
+          <p className="text-red-700 font-bold">{alert.address?.province || '-'}</p>
         </div>
 
         <div>
           <label className="font-medium">เขต:</label>
-          <p className="text-red-700 font-bold">{alert.message}</p>
+          <p className="text-red-700 font-bold">{alert.address?.district || '-'}</p>
         </div>
 
         <div>
