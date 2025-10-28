@@ -127,6 +127,16 @@ export default function AlertsHistoryPage() {
                 </div>
 
                 <div className="mb-2">
+                  <span className="font-semibold block">จังหวัด:</span>
+                  <p className="text-gray-300 text-sm sm:text-base">{alert.address?.province || '-'}</p>
+                </div>
+
+                <div className="mb-2">
+                  <span className="font-semibold block">เขต:</span>
+                  <p className="text-gray-300 text-sm sm:text-base">{alert.address?.district || '-'}</p>
+                </div>
+
+                <div className="mb-2">
                   <span className="font-semibold block">รัศมีที่ได้รับผลกระทบ:</span>
                   <p className="text-gray-300 text-sm sm:text-base">{alert.radius} เมตร</p>
                 </div>

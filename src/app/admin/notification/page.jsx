@@ -33,6 +33,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (location?.lat != null && location?.lng != null) {
+      console.log('🔹 Selected location:', location);
+  
       const fetchAddress = async () => {
         try {
           const res = await fetch('/api/reverse-geocode', {
@@ -40,19 +42,30 @@ export default function Dashboard() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ lat: location.lat, lng: location.lng }),
           });
+  
+          if (!res.ok) {
+            console.error('❌ Reverse geocode API failed', res.status);
+            setAddress({ province: '', district: '' });
+            return;
+          }
+  
           const data = await res.json();
+          console.log('✅ Address fetched:', data);
+  
           setAddress({
             province: data.province || '',
             district: data.district || '',
           });
         } catch (err) {
-          console.error('Error fetching address:', err);
+          console.error('❌ Error fetching address:', err);
           setAddress({ province: '', district: '' }); // ป้องกันค้าง
         }
       };
+  
       fetchAddress();
     }
   }, [location]);
+  
   
   
 
