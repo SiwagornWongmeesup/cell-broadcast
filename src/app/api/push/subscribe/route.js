@@ -25,7 +25,7 @@ export async function POST(req) {
 }
 
 // ฟังก์ชันส่ง push notification
-export async function sendPush(alert,address) {
+export async function sendPush(alert) {
   // alert = { title, body, province, district }
   const { db } = await connectMongoDB();
   const subscriptions = await db.collection('subscriptions').find({}).toArray();
@@ -37,8 +37,8 @@ export async function sendPush(alert,address) {
         JSON.stringify({
           title: alert.title,
           body: alert.body,
-          province: (address && address.province) || alert.province || '',
-          district: (address && address.district) || alert.district || '',
+          province: alert.province,
+          district: alert.district,
         })
       );
     } catch (err) {
