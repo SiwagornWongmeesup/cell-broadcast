@@ -68,9 +68,13 @@ export default function DashboardPage() {
           datasets: [{
             label: 'จำนวนแจ้งเตือนต่อเดือน',
             data: Object.values(data.countsByMonth || {}),
-            borderColor: 'rgb(75, 192, 192)',
-            fill: false,
-            tension: 0.1,
+            backgroundColor: [
+              '#FF6384',
+              '#36A2EB',
+              '#FFCE56',
+              '#4BC0C0',
+              '#9966FF'
+            ],
           }]
         });
         setLineChartDataUser({
@@ -78,9 +82,13 @@ export default function DashboardPage() {
           datasets: [{
             label: 'Top 5 user ที่ส่งแจ้งเตือนมากที่สุด',
             data:top5Users.map(u => u.alertCount),
-            borderColor: 'rgb(75, 192, 192)',
-            fill: false,
-            tension: 0.1,
+            backgroundColor: [
+              '#FF6384',
+              '#36A2EB',
+              '#FFCE56',
+              '#4BC0C0',
+              '#9966FF'
+            ],
           }]
         });
         // Pie Charts
@@ -154,6 +162,7 @@ export default function DashboardPage() {
         <div className="bg-white p-4 md:p-6 rounded-lg shadow-md mb-6">
           <Bar data={lineChartData} 
           options={{
+            indexAxis: 'x',
             scales: {
               y: {
                 beginAtZero: true,
@@ -171,6 +180,7 @@ export default function DashboardPage() {
         <div className="bg-white p-4 md:p-6 rounded-lg shadow-md mb-6">
           <Bar data={lineChartDatauser} 
           options={{
+            indexAxis: 'x',
             scales: {
               y: {
                 beginAtZero: true,

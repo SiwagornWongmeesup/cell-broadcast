@@ -82,7 +82,7 @@ export async function GET() {
     // แปลง districts -> mainDistrict + otherDistricts
 const enrichedTopUsers = topUsers.map(u => {
   const counts = u.districts.reduce((acc, d) => {
-    acc[d] = (acc[d] || 0) + 1;
+    acc[d] = (acc[d] || 0) + 1;//ถ้าเจอ district เดิม ให้ +1
     return acc;
   }, {});
   const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
@@ -90,8 +90,8 @@ const enrichedTopUsers = topUsers.map(u => {
     _id: u._id,
     name: u.name,
     alertCount: u.count,
-    mainDistrict: sorted[0]?.[0] || "ไม่มีข้อมูล",
-    otherDistricts: sorted.slice(1).map(d => d[0])
+    mainDistrict: sorted[0]?.[0] || "ไม่มีข้อมูล", // ส่งบ่อยที่สุด
+    otherDistricts: sorted.slice(1).map(d => d[0])// ส่งรองลงมา
   };
 });
 
