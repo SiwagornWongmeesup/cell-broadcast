@@ -9,6 +9,7 @@ export async function GET() {
     const alerts = await db.collection("alerts").find({}).toArray();
     const users = await db.collection("users").find({}).toArray();
     const userreports = await db.collection("userreports").find({}).toArray();
+   
 
     // ดึง userprofiles เฉพาะที่มี instagram
     const userprofiles = await db.collection("userprofiles").find({
@@ -67,7 +68,8 @@ export async function GET() {
       $group: {
         _id: "$userId",
         name: { $first: "$name" },  // ใช้ชื่อปัจจุบันของ user
-        count: { $sum: 1 }          // นับจำนวน report
+        count: { $sum: 1 },
+        districts: { $push: "$address.district" }          // นับจำนวน report
       }
     },
     { $sort: { count: -1 } },        // เรียงจากเยอะสุด
@@ -76,6 +78,22 @@ export async function GET() {
 
     // ดึง IG ของ user ทั้งหมดเป็น array ของ string
     const instagramList = userprofiles.map(u => u.instagram);
+
+    // แปลง districts -> mainDistrict + otherDistricts
+const enrichedTopUsers = topUsers.map(u => {
+  const counts = u.districts.reduce((acc, d) => {
+    acc[d] = (acc[d] || 0) + 1;
+    return acc;
+  }, {});
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  return {
+    _id: u._id,
+    name: u.name,
+    alertCount: u.count,
+    mainDistrict: sorted[0]?.[0] || "ไม่มีข้อมูล",
+    otherDistricts: sorted.slice(1).map(d => d[0])
+  };
+});
 
     return NextResponse.json({
       totalAlerts,
@@ -88,7 +106,8 @@ export async function GET() {
       allStats,
       countsByMonth,
       labels,
-      topUsers
+      topUsers,
+      enrichedTopUsers
     });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -103,7 +103,12 @@ export async function POST(req) {
       dismissedBy: [],
     });
 
-    await sendPush(`[${type}] แจ้งเตือนใหม่`, message);
+    await sendPush({
+      title: `[${type}] แจ้งเตือนใหม่ `,
+      body: message,
+      province,
+      district
+    })
 
     // ถ้าเลือกส่งอีเมล
     if (sendEmail) {

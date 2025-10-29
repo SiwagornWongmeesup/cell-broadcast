@@ -31,6 +31,7 @@ ChartJS.register(
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState([]);
   const [lineChartData, setLineChartData] = useState(null);
+  const [lineChartDatauser, setLineChartDataUser] = useState(null);
   const [pieAdminData, setPieAdminData] = useState(null);
   const [pieUserData, setPieUserData] = useState(null);
   const [pieAreaData, setPieAreaData] = useState(null);
@@ -49,6 +50,10 @@ export default function DashboardPage() {
         const res = await fetch(`/api/admin/dashboard?month=${filters.month}&type=${filters.type}`);
         const data = await res.json();
 
+        const top5Users = (data.topUsers || [])
+  .sort((a, b) => b.alertCount - a.alertCount) // เรียงจากมากไปน้อย
+  .slice(0, 5); // เอา 5 อันดับแรก
+
         // Metrics
         setMetrics([
           { title: 'จำนวนแจ้งเตือนทั้งหมด', value: data.totalAlerts, icon: '🚨' },
@@ -63,6 +68,16 @@ export default function DashboardPage() {
           datasets: [{
             label: 'จำนวนแจ้งเตือนต่อเดือน',
             data: Object.values(data.countsByMonth || {}),
+            borderColor: 'rgb(75, 192, 192)',
+            fill: false,
+            tension: 0.1,
+          }]
+        });
+        setLineChartDataUser({
+          labels: top5Users.map(u => u.name),
+          datasets: [{
+            label: 'Top 5 user ที่ส่งแจ้งเตือนมากที่สุด',
+            data:top5Users.map(u => u.alertCount),
             borderColor: 'rgb(75, 192, 192)',
             fill: false,
             tension: 0.1,
@@ -97,7 +112,7 @@ export default function DashboardPage() {
         });
 
         setInstagramList(data.instagramList || []);
-        setTopUsers(data.topUsers || []);
+        setTopUsers(data. enrichedTopUsers || []);
         setTopAreas(data.topAreas || []);
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err);
@@ -138,6 +153,23 @@ export default function DashboardPage() {
         {/* Line Chart */}
         <div className="bg-white p-4 md:p-6 rounded-lg shadow-md mb-6">
           <Bar data={lineChartData} 
+          options={{
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1, // หรือ 5 ถ้า max เยอะ
+                  precision: 0 // ให้เป็นจำนวนเต็ม
+                }
+              }
+            }
+          }} 
+          />
+        </div>
+        
+        {/* Line Chart */}
+        <div className="bg-white p-4 md:p-6 rounded-lg shadow-md mb-6">
+          <Bar data={lineChartDatauser} 
           options={{
             scales: {
               y: {
@@ -232,44 +264,29 @@ export default function DashboardPage() {
         {/* Top 5 Tables */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-white p-4 md:p-6 rounded-lg shadow-md overflow-x-auto">
-            <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-4">Top 5 Users ส่งแจ้งเตือน</h2>
+            <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-4">รายระเอียดUser</h2>
             <table className="w-full text-left">
               <thead>
                 <tr>
                   <th className="border px-2 py-1">User</th>
+                  <th className="border px-2 py-1">เขตที่รายงานบ่อย</th>
                   <th className="border px-2 py-1">จำนวนแจ้งเตือน</th>
+                  <th className="border px-2 py-1">เขตอื่นที่เคยรายงาน</th>
                 </tr>
               </thead>
               <tbody>
                 {topUsers.map((u, i) => (
                   <tr key={u._id || i}>
                     <td className="border px-2 py-1">{u.name}</td>
-                    <td className="border px-2 py-1">{u.count}</td>
-                  </tr>
+                    <td className="border px-2 py-1">{u.mainDistrict}</td>
+                    <td className="border px-2 py-1">{u.alertCount}</td>
+                    <td className="border px-2 py-1">{u.otherDistricts.join(", ")}</td>
+                  </tr> 
                 ))}
               </tbody>
             </table>
           </div>
 
-          <div className="bg-white p-4 md:p-6 rounded-lg shadow-md overflow-x-auto">
-            <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-4">Top 5 เขตเสี่ยง</h2>
-            <table className="w-full text-left">
-              <thead>
-                <tr>
-                  <th className="border px-2 py-1">เขต</th>
-                  <th className="border px-2 py-1">จำนวนเหตุการณ์</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topAreas.map((a, i) => (
-                  <tr key={i}>
-                    <td className="border px-2 py-1">{a.area}</td>
-                    <td className="border px-2 py-1">{a.count}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       </main>
     </div>
