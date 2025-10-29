@@ -89,6 +89,9 @@ export default function DashboardPage() {
               '#4BC0C0',
               '#9966FF'
             ],
+            borderColor: '#333',
+            borderWidth: 1,
+            barThickness: 40
           }]
         });
         // Pie Charts
