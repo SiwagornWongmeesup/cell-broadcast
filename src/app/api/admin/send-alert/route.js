@@ -104,10 +104,8 @@ export async function POST(req) {
     });
 
     await sendPush({
-      title: `[${type}] แจ้งเตือนใหม่ `,
-      body: message,
-      province,
-      district
+      title: `แจ้งเตือนใหม่`, 
+      body: `[${type}] ${message}\nพื้นที่: ${province || '-'} ${district || '-'}`,
     })
 
     // ถ้าเลือกส่งอีเมล

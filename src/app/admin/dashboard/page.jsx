@@ -78,10 +78,10 @@ export default function DashboardPage() {
           }]
         });
         setLineChartDataUser({
-          labels: top5Users.map(u => u.name),
+          labels: enrichedTopUsers.map(u => u.name),
           datasets: [{
             label: 'Top 5 user ที่ส่งแจ้งเตือนมากที่สุด',
-            data:top5Users.map(u => u.alertCount),
+            data: enrichedTopUsers.map(u => u.alertCount),
             backgroundColor: [
               '#FF6384',
               '#36A2EB',
