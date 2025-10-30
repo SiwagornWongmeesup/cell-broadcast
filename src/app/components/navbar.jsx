@@ -90,7 +90,7 @@ function Navbar({ session }) {
                 </button>
                 {isDropdownOpen && (
                   <div className="absolute left-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-50">
-                    <Link href='/manual/level' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/manual/level') ? 'bg-gray-600' : ''}`}>ข่าวสาร</Link>
+                
                     <Link href='/Copingguide' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/Copingguide') ? 'bg-gray-600' : ''}`}>คู่มือรับมือ</Link>
                     <Link href='/Contact' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/Contact') ? 'bg-gray-600' : ''}`}>ติดต่อเรา</Link>
                   </div>

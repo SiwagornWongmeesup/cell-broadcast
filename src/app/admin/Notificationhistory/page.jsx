@@ -1,62 +1,121 @@
-import React from 'react'
+"use client";
+import React, { useEffect, useState } from "react";
+import Sidebar from "../../components/Sidebar";
 
-export default function Notificationhistory() {
-  // สร้างข้อมูลสมมติสำหรับตาราง
-  const recentAlerts = [
-    { id: '#001', type: 'ภัยน้ำท่วม', message: 'กรุงเทพฯ ระดับน้ำเพิ่มขึ้น', status: 'สำเร็จ', area: 'กรุงเทพฯ', time: '2025-08-04 10:00' },
-    { id: '#002', type: 'แผ่นดินไหว', message: 'รู้สึกสั่นสะเทือนในภาคเหนือ', status: 'สำเร็จ', area: 'เชียงใหม่', time: '2025-08-03 15:30' },
-    { id: '#003', type: 'ไฟไหม้', message: 'เกิดเหตุเพลิงไหม้ที่ตลาด', status: 'ล้มเหลว', area: 'โคราช', time: '2025-08-02 08:15' },
-  ];
+export default function NotificationHistory() {
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null); 
+
+  // 🔹 ดึงข้อมูลจาก API
+  const fetchAlerts = async () => {
+    try {
+      const res = await fetch("/api/alerts", {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        // สำหรับ user / admin ใช้ allDisasterAlerts เป็นหลัก
+        setAlerts(data.allDisasterAlerts || []);
+      }
+    } catch (err) {
+      console.error("Error fetching alerts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔹 ลบแจ้งเตือน
+  const deleteAlert = async (id) => {
+    if (!confirm("แน่ใจหรือว่าต้องการลบแจ้งเตือนนี้?")) return;
+    
+    setDeletingId(id);
+
+    try {
+      const res = await fetch("/api/alerts", {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert("ลบแจ้งเตือนเรียบร้อยแล้ว");
+        fetchAlerts();
+      }
+    } catch (err) {
+      console.error("Error deleting alert:", err);
+    }
+  };
+  
+  
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
 
   return (
-    <>
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">ภาพรวม Dashboard</h1>
-
-      {/* Grid สำหรับ Card Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* ... โค้ด Card Metrics เดิม ... */}
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="lg:w-64 w-full border-b lg:border-r bg-white shadow-sm">
+        <Sidebar />
       </div>
 
-      {/* Grid สำหรับกราฟ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* ... โค้ดกราฟเดิม ... */}
-      </div>
+      {/* Main Content */}
+      <main className="flex-1 p-4 lg:p-8 overflow-x-auto">
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">
+          ประวัติการแจ้งเตือน
+        </h1>
 
-      {/* ตารางแสดงข้อมูลการแจ้งเตือนล่าสุด */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">การแจ้งเตือนล่าสุด</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full table-auto">
-            <thead>
-              <tr className="bg-gray-200 text-left text-gray-600 uppercase text-sm">
-                <th className="py-3 px-6">ID</th>
-                <th className="py-3 px-6">ประเภท</th>
-                <th className="py-3 px-6">ข้อความ</th>
-                <th className="py-3 px-6">พื้นที่</th>
-                <th className="py-3 px-6">สถานะ</th>
-                <th className="py-3 px-6">เวลา</th>
-              </tr>
-            </thead>
-            <tbody className="text-gray-600 text-sm font-light">
-              {recentAlerts.map((alert, index) => (
-                <tr key={index} className="border-b border-gray-200 hover:bg-gray-100">
-                  <td className="py-3 px-6">{alert.id}</td>
-                  <td className="py-3 px-6">{alert.type}</td>
-                  <td className="py-3 px-6">{alert.message}</td>
-                  <td className="py-3 px-6">{alert.area}</td>
-                  <td className="py-3 px-6">
-                    <span className={`py-1 px-3 rounded-full text-xs font-semibold 
-                      ${alert.status === 'สำเร็จ' ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600'}`}>
-                      {alert.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-6">{alert.time}</td>
+        {/* Loading */}
+        {loading ? (
+          <p className="text-gray-500">กำลังโหลดข้อมูล...</p>
+        ) : alerts.length === 0 ? (
+          <p className="text-gray-500">ยังไม่มีการแจ้งเตือนในระบบ</p>
+        ) : (
+          <div className="bg-white p-4 lg:p-6 rounded-lg shadow-md overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-gray-200 text-gray-600 uppercase text-xs lg:text-sm">
+                  <th className="py-3 px-4 text-left">ประเภท</th>
+                  <th className="py-3 px-4 text-left">ข้อความ</th>
+                  <th className="py-3 px-4 text-left">พื้นที่</th>
+                  <th className="py-3 px-4 text-left">เวลา</th>
+                  <th className="py-3 px-4 text-center">การจัดการ</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
+              </thead>
+              <tbody className="text-gray-700">
+                {alerts.map((alert) => (
+                  <tr
+                    key={alert._id}
+                    className="border-b border-gray-100 hover:bg-gray-50 transition"
+                  >
+                    <td className="py-3 px-4 font-medium">{alert.type}</td>
+                    <td className="py-3 px-4">{alert.message}</td>
+                    <td className="py-3 px-4">
+                      {alert.province || "-"} {alert.district || "-"}
+                    </td>
+                    <td className="py-3 px-4">
+                      {new Date(alert.createdAt).toLocaleString("th-TH")}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <button
+                        onClick={() => deleteAlert(alert._id)}
+                        className="px-3 py-1 text-xs lg:text-sm bg-red-500 text-white rounded hover:bg-red-600 transition"
+                      >
+                        { deletingId === alert._id ? 'กำลังลบ...' : 'ลบ' }
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }

@@ -23,57 +23,69 @@ function getDistance(lat1, lng1, lat2, lng2) {
 export async function GET(req) {
   try {
     await connectMongoDB();
-
-    const now = new Date();
-    const { searchParams } = new URL(req.url);
-
-    // ดึง session
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session?.user?.role !== 'user') {
+
+    if (!session?.user?.id || !['user','admin'].includes(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = session.user.id;
-    const lat = parseFloat(searchParams.get('lat'));
-    const lng = parseFloat(searchParams.get('lng'));
+    const role = session.user.role;
+    let allDisasterAlerts = [];
 
-    if (isNaN(lat) || isNaN(lng)) {
-      return NextResponse.json({ error: 'Invalid latitude or longitude' }, { status: 400 });
-    }
+    if (role === 'user') {
+      const now = new Date();
+      const { searchParams } = new URL(req.url);
+      const lat = parseFloat(searchParams.get('lat'));
+      const lng = parseFloat(searchParams.get('lng'));
+      const userId = session.user.id;
 
-    // ดึง alert ที่ยังไม่หมดอายุ
-    const allDisasterAlerts = await Alert.find({ expiresAt: { $gt: now } });
+      if (isNaN(lat) || isNaN(lng)) {
+        return NextResponse.json({ error: 'Invalid latitude or longitude' }, { status: 400 });
+      }
 
-    // แจ้งเตือนใกล้เคียง
-    const nearbyAlerts = allDisasterAlerts
-      .filter(alert => alert.location)
-      .filter(alert => !alert.readBy?.includes(userId))
-      .filter(alert => !alert.dismissedBy?.includes(userId))
-      .filter(alert => {
-        const distance = getDistance(lat, lng, alert.location.lat, alert.location.lng);
-        // แปลง radius ถ้าเป็นค่าเล็กกว่า 100 สมมติเป็น km
-        const alertRadius = alert.radius < 100 ? alert.radius * 1000 : alert.radius;
-        return distance <= alertRadius;
+      const alerts = await Alert.find({ expiresAt: { $gt: now } });
+
+      // filter nearby & unread & undismissed
+      const nearbyAlerts = alerts
+        .filter(alert => alert.location)
+        .filter(alert => !alert.readBy?.includes(userId))
+        .filter(alert => !alert.dismissedBy?.includes(userId))
+        .filter(alert => {
+          const distance = getDistance(lat, lng, alert.location.lat, alert.location.lng);
+          const alertRadius = alert.radius < 100 ? alert.radius * 1000 : alert.radius;
+          return distance <= alertRadius;
+        });
+
+      const latestAlert = alerts
+        .filter(alert => alert.location)
+        .filter(alert => !alert.readBy?.includes(userId))
+        .filter(alert => !alert.dismissedBy?.includes(userId))
+        .sort((a,b) => b.createdAt - a.createdAt)[0] || null;
+
+      // สำหรับ table ประวัติ: ส่ง alerts ทั้งหมดที่ยังไม่หมดอายุ
+      allDisasterAlerts = alerts.sort((a,b) => b.createdAt - a.createdAt);
+
+      return NextResponse.json({
+        success: true,
+        nearbyAlerts,
+        latestAlert,
+        allDisasterAlerts,
       });
 
-    // แจ้งเตือนล่าสุด
-    const latestAlert = allDisasterAlerts
-      .filter(alert => alert.location)
-      .filter(alert => !alert.readBy?.includes(userId))
-      .filter(alert => !alert.dismissedBy?.includes(userId))
-      .sort((a, b) => b.createdAt - a.createdAt)[0] || null;
+    } else if (role === 'admin') {
+      // สำหรับ admin: ดึง alert ทั้งหมด
+      allDisasterAlerts = await Alert.find().sort({ createdAt: -1 });
 
-    console.log("Nearby Alerts:", nearbyAlerts);
+      return NextResponse.json({
+        success: true,
+        allDisasterAlerts,
+      });
+    }
 
-    return NextResponse.json({
-      nearbyAlerts,       // แจ้งเตือนใกล้เคียง
-      latestAlert,        // แจ้งเตือนล่าสุด
-      allDisasterAlerts,  // สำหรับหน้าประวัติ
-    });
   } catch (err) {
     console.error('GET /api/alerts error:', err);
     return NextResponse.json(
-      { error: 'Internal Server Error', details: err.message },
+      { success: false, error: 'Internal Server Error', details: err.message },
       { status: 500 }
     );
   }
