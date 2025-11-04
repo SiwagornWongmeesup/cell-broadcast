@@ -35,7 +35,7 @@ export default function NotificationHistory() {
     setDeletingId(id);
 
     try {
-      const res = await fetch("/api/alerts", {
+      const res = await fetch("/api/admin/Notificationhistory", {
         method: "DELETE",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
