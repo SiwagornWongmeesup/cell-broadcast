@@ -1,39 +1,64 @@
 "use client";
-import { useState } from "react";
+import { useRef } from "react";
+import { useSession } from "next-auth/react";
+import React, { useState, useEffect } from "react";
+
 
 export default function ContactUs() {
+  const { data: session } = useSession()
   const [formData, setFormData] = useState({
-    name: "",
+    name: session?.user?.name || "",
     email: "",
+    file: "",
     message: "",
   });
-
+  
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
+  const fileInputRef = useRef(null);
 
+   useEffect(() => {
+      if (session?.user?.id) {
+        setFormData(prev => ({
+          ...prev,
+          userId: session.user.id,
+          name: session.user.name || ""
+        }));
+      }
+    }, [session]);
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, } = e.target;
+    setFormData({ ...formData, [name]: value });    
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setSuccess("");
-
     try {
-      const res = await fetch("/api/contact", {
+      const data = new FormData();
+      data.append("name", formData.name);
+      data.append("email", formData.email);
+      data.append("message", formData.message);
+      if (fileInputRef.current.files[0]) {
+        data.append("file", fileInputRef.current.files[0]);
+      }
+
+      const res = await fetch("/api/admin/contact-messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: data,
       });
 
-      const data = await res.json();
+      const result = await res.json();
 
       if (res.ok) {
-        setSuccess("✅ ส่งข้อความเรียบร้อยแล้ว! ทีมงานจะติดต่อกลับเร็ว ๆ นี้");
+        setSuccess(
+          "✅ ส่งข้อความเรียบร้อยแล้ว! ทีมงานจะติดต่อกลับเร็ว ๆ นี้"
+        );
         setFormData({ name: "", email: "", message: "" });
+        if (fileInputRef.current) fileInputRef.current.value = "";
       } else {
-        alert("❌ ส่งข้อความไม่สำเร็จ: " + data.error);
+        alert("❌ ส่งข้อความไม่สำเร็จ: " + result.message);
       }
     } catch (err) {
       console.error(err);
@@ -49,17 +74,6 @@ export default function ContactUs() {
         <h2 className="text-3xl font-bold mb-6 text-center">📬 ติดต่อเรา</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block mb-1 font-medium">ชื่อ</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-              required
-            />
-          </div>
 
           <div>
             <label className="block mb-1 font-medium">อีเมล</label>
@@ -83,6 +97,18 @@ export default function ContactUs() {
               required
             ></textarea>
           </div>
+
+          <div>
+                <label className="block mb-1 font-medium">แนบรูปภาพ/วิดีโอ (ถ้ามี)</label>
+                <input
+                  type="file"
+                  name="file"
+                  accept="image/*,video/*"
+                  className="w-full p-2 border border-gray-600 rounded bg-gray-800 text-gray-100"
+                  onChange={handleChange}
+                  ref={fileInputRef}
+                />
+              </div>
 
           <button
             type="submit"

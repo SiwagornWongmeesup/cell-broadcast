@@ -6,17 +6,43 @@ export default function AdminContactMessages() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-
   // ดึงข้อมูลจาก API
   const fetchMessages = async () => {
     try {
       const res = await fetch("/api/admin/contact-messages");
       const data = await res.json();
-      setMessages(data);
+      if (data && Array.isArray(data.contact)) {
+        setMessages(data.contact);
+      } else {
+        setMessages([]);
+      }
     } catch (err) {
       console.error("Error fetching messages:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (userId) => {
+    if (!confirm("คุณแน่ใจว่าจะลบข้อควานี้?")) return;
+
+    try {
+      const res = await fetch("/api/admin/contact-messages", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: userId }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("ลบข้อความสำเร็จ");
+        fetchMessages();
+      } else {
+        alert("เกิดข้อผิดพลาด: " + data.error);
+      }
+    } catch (error) {
+      alert("เกิดข้อผิดพลาด: " + error.message);
     }
   };
 
@@ -27,8 +53,8 @@ export default function AdminContactMessages() {
   }, []);
 
   return (
-    <div className="min-h-screen flex bg-white">
-        <Sidebar />
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
+      <Sidebar />
 
       {/* Main content */}
       <div className="flex-1 p-6 md:p-12">
@@ -48,6 +74,7 @@ export default function AdminContactMessages() {
                   <th className="border px-4 py-2 text-left">ชื่อ</th>
                   <th className="border px-4 py-2 text-left">อีเมล</th>
                   <th className="border px-4 py-2 text-left">ข้อความ</th>
+                  <th className="border px-4 py-2 text-left">ไฟล์แนบ</th>
                   <th className="border px-4 py-2 text-left">วันที่ส่ง</th>
                 </tr>
               </thead>
@@ -61,7 +88,29 @@ export default function AdminContactMessages() {
                     <td className="border px-4 py-2">{msg.email}</td>
                     <td className="border px-4 py-2">{msg.message}</td>
                     <td className="border px-4 py-2">
+                      {msg.file ? (
+                        <a
+                          href={msg.file}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 underline"
+                        >
+                          เปิดไฟล์
+                        </a>
+                      ) : (
+                        "ไม่มีไฟล์"
+                      )}
+                    </td>
+                    <td className="border px-4 py-2">
                       {new Date(msg.createdAt).toLocaleString()}
+                    </td>
+                    <td className="border px-4 py-2">
+                      <button
+                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                        onClick={() => handleDelete(msg._id)}
+                      >
+                        ลบ
+                      </button>
                     </td>
                   </tr>
                 ))}
