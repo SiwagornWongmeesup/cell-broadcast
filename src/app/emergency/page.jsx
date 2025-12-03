@@ -149,7 +149,7 @@ export default function EmergencyPage() {
             />
 
           <textarea
-            placeholder="รายละเอียดเพิ่มเติม (ไม่บังคับ)"
+            placeholder="รายละเอียดที่อยู่"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             className="p-3 rounded-md border text-white"

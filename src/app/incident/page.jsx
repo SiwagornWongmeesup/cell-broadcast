@@ -214,7 +214,7 @@ export default function IncidentPage() {
                   className="w-full p-2 border border-gray-600 rounded bg-gray-800 text-gray-100 focus:ring-2 focus:ring-red-400"
                   onChange={handleChange}
                   required
-                />
+                />     
               </div>
 
               <div className="grid grid-cols-1 gap-4">

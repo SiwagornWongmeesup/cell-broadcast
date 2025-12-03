@@ -4,12 +4,12 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// แก้ icon default ของ Leaflet (เพราะ Next.js บางทีไม่เจอ)
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: '/leaflet/marker-icon-2x.png',
-  iconUrl: '/leaflet/marker-icon.png',
-  shadowUrl: '/leaflet/marker-shadow.png',
+  iconUrl: '/marker-icon-2x.png',
+  shadowUrl: '/marker-shadow.png',
 });
 
 export default function AdminMap({ requests }) {

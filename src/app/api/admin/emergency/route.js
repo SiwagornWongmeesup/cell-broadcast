@@ -13,23 +13,23 @@ export async function GET() {
   }
 }
 
-export async function POST(req) {
+export async function DELETE(req) {
   try {
     await connectMongoDB();
     const data = await req.json();
-    const { name, phone, lat, lng, message } = data;
+    const { id } = data; // ส่ง _id ของข้อความที่ต้องการลบ
 
-    if (!name || !phone || !lat || !lng) {
-      return NextResponse.json({ error: 'กรอกข้อมูลไม่ครบ' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'กรุณาระบุ id ของข้อความ' }, { status: 400 });
     }
 
-    // 1️⃣ บันทึกเป็นผู้ใช้ใหม่
-    const newUser = await User.create({ name, phone, lat, lng, message });
+    const deleted = await Emergency.findByIdAndDelete(id);
 
-    // 2️⃣ ลบคำขอหลังจากบันทึก
-    await Emergency.deleteOne({ _id: data._id });
+    if (!deleted) {
+      return NextResponse.json({ error: 'ไม่พบข้อความที่ต้องการลบ' }, { status: 404 });
+    }
 
-    return NextResponse.json({ success: true, user: newUser });
+    return NextResponse.json({ success: true, deletedId: id });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'เกิดข้อผิดพลาด' }, { status: 500 });

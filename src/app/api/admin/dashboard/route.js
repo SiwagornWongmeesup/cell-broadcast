@@ -10,10 +10,7 @@ export async function GET() {
     const users = await db.collection("users").find({}).toArray();
     const userreports = await db.collection("userreports").find({}).toArray();
     const Emergencys = await db.collection("emergencies").find({}).toArray();
-   
-
-    const totalPendingHelp = Emergencys.filter(e => e.status === "pending").length;
-    const totalResolvedHelp = Emergencys.filter(e => e.status === "resolved").length;
+  
     // ดึง userprofiles เฉพาะที่มี instagram
     const userprofiles = await db.collection("userprofiles").find({
       instagram: { $exists: true, $ne: "" }
@@ -23,6 +20,8 @@ export async function GET() {
     const totalUsers = users.length;
     const totalUserreports = userreports.length;
     const totalUserprofiles = userprofiles.length;
+    const totalPendingHelp = Emergencys.length;
+    const totalResolvedHelp = Emergencys.length;
 
     // สถิติประเภท alert
     const typeStats = alerts.reduce((acc, alert) => {

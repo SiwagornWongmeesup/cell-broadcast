@@ -21,22 +21,19 @@ export default function AdminEmergencyPage() {
   };
 
   // บันทึก & ลบ
-  const handleSaveAndDelete = async (req) => {
-    try {
-      // 1. ส่งข้อมูลไปเบื้องบน
-      await fetch('/api/send-to-upper', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(req)
-      });
-
-      // 2. ลบคำขอ
-      await fetch(`/api/admin/emergency/${req._id}`, { method: 'DELETE' });
-
-      // 3. Refresh list
-      fetchRequests();
-    } catch (err) {
-      console.error('บันทึก & ลบไม่สำเร็จ', err);
+  const handleDelete = async (id) => {
+    const res = await fetch('/api/admin/emergency', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+  
+    const data = await res.json();
+    if (data.success) {
+      alert('ลบข้อความเรียบร้อย');
+      fetchRequests(); // รีเฟรชตาราง
+    } else {
+      alert(data.error);
     }
   };
 
@@ -91,7 +88,7 @@ export default function AdminEmergencyPage() {
                     <td className="border px-2 py-1">
                       <button
                         className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"
-                        onClick={() => handleSaveAndDelete(req)}
+                        onClick={() => handleDelete(req)}
                       >
                         บันทึก & ลบ
                       </button>
