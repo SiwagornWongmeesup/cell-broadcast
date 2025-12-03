@@ -6,7 +6,7 @@ import { signOut } from 'next-auth/react'
 
 function Navbar({ session }) { 
   const pathname = usePathname();
-  const isActive = (path) => pathname.toLowerCase().startsWith(path.toLowerCase());
+  const isActive = (path) => pathname.toLowerCase().startsWith(path.toLowerCase())//  Check if current path matches menu link (for active highlight)
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -119,6 +119,12 @@ function Navbar({ session }) {
                     <Link href='/profile' onClick={() => setIsMobileMenuOpen(false)} className={`block px-4 py-2 text-white hover:bg-gray-600 transition-colors duration-200 ${isActive('/profile') ? 'bg-gray-600' : ''}`}>โปรไฟล์</Link>
                   </div>
                 )}
+              </li>
+
+              <li>
+                <Link href='/emergency' onClick={() => setIsMobileMenuOpen(false)} className={`flex items-center px-3 py-2 rounded-md font-bold bg-red-600 text-white shadow-md border border-red-700 hover:bg-red-700 hover:shadow-lg transition-all duration-200 md:ml-2 ${isActive('/emergency') ? 'bg-red-600 border' : ''}`}>
+                🔴 ขอความช่วยเหลือ 
+                </Link>
               </li>
 
               <li>

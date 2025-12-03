@@ -23,6 +23,7 @@ export default function NavbarAdmin({ session }) {
       name: 'จัดการข้อมูล',
       submenu: [
         { name: 'ข้อความจากผู้ใช้', href: '/admin/contact' },
+        { name: 'ขอความช่วยเหลือ', href: '/admin/emergency' },
         { name: 'รายการเหตุการณ์', href: '/admin/Report' },
         { name: 'ผู้ใช้งาน', href: '/admin/users' },
         { name: 'คู่มือและข่าวสาร', href: '/admin/content' },

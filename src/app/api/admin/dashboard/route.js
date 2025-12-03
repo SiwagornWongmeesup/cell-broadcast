@@ -9,8 +9,11 @@ export async function GET() {
     const alerts = await db.collection("alerts").find({}).toArray();
     const users = await db.collection("users").find({}).toArray();
     const userreports = await db.collection("userreports").find({}).toArray();
+    const Emergencys = await db.collection("emergencies").find({}).toArray();
    
 
+    const totalPendingHelp = Emergencys.filter(e => e.status === "pending").length;
+    const totalResolvedHelp = Emergencys.filter(e => e.status === "resolved").length;
     // ดึง userprofiles เฉพาะที่มี instagram
     const userprofiles = await db.collection("userprofiles").find({
       instagram: { $exists: true, $ne: "" }
@@ -100,6 +103,8 @@ const enrichedTopUsers = topUsers.map(u => {
       totalUsers,
       totalUserreports,
       totalUserprofiles,
+      totalPendingHelp,
+      totalResolvedHelp,
       typeStats,
       statsReports,
       instagramList,

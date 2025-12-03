@@ -22,6 +22,7 @@ export default function Sidebar({ session }) {
       name: 'จัดการข้อมูล',
       submenu: [
         { name: 'รายงานเหตุการณ์', href: '/admin/Report' },
+        { name: 'ขอความช่วยเหลือ', href: '/admin/emergency' },
         { name: 'ผู้ใช้งาน', href: '/admin/users' },
         { name: 'คู่มือและข่าวสาร', href: '/admin/content' },
       ],

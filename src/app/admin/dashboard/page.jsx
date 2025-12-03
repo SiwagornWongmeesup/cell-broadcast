@@ -50,7 +50,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchDashboard = async () => {
-      try {
+      try { 
         const res = await fetch(`/api/admin/dashboard?month=${filters.month}&type=${filters.type}`);
         const data = await res.json();
 
@@ -59,6 +59,8 @@ export default function DashboardPage() {
           { title: 'จำนวนแจ้งเตือนทั้งหมด', value: data.totalAlerts, icon: '🚨' },
           { title: 'ผู้ใช้งานทั้งหมด', value: data.totalUsers, icon: '👤' },
           { title: 'รายงานจากผู้ใช้ทั้งหมด', value: data.totalUserreports, icon: '📝' },
+          { title: 'รอความช่วยเหลือ', value: data.totalPendingHelp, icon: '' },
+          { title: 'ได้รับการช่วยเหลือแล้ว', value: data.totalResolvedHelp, icon: '' },
           { title: 'ผู้ใช้ที่มี IG', value: data.totalUserprofiles, icon: '📸' },
         ]);
 

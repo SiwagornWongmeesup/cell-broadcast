@@ -159,6 +159,15 @@ function Login() {
                 ลงทะเบียน
               </Link>
             </p>
+
+               {/* 🚨 ปุ่มขอความช่วยเหลือ */}
+               <Link
+              href="/emergency"
+              className="block w-full bg-red-600 hover:bg-red-700 text-white text-center mt-3 font-bold py-3 rounded-lg text-lg shadow-lg animate-pulse"
+            >
+              🚨 ขอความช่วยเหลือด่วน
+            </Link>
+
           </div>
         </div>
       </div>
